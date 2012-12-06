@@ -1,6 +1,7 @@
 
 SRCS= 			\
-	src/galv.o
+	src/galv.o	\
+	src/blam.o
 
 LDFLAGS+=-ltalloc
 

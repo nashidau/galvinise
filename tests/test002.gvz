@@ -1,0 +1,5 @@
+Test of basic evaluations:
+No evaluation: GALVINISE
+Eval to version string: $GALVINISE
+Eval to currenty pants status: $GALVINISE_PANTS
+Eval in middle of line: $GALVINISE some value
