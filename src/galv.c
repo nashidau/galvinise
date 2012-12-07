@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,9 @@
 #include <unistd.h>
 
 #include <talloc.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 #include "galv.h"
 
@@ -19,17 +23,34 @@ struct inputfile {
 	const char *outfile;
 };
 
+static struct predef_symbols {
+	const char *symbol;
+	const char *value;
+} predef_symbols[] = {
+	{ "GALVINISE", "Galvinise 0.1" },
+	{ "GALVINISE_VERSION", "0.1" },
+	{ "PANTS", "On" },
+};
+#define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
+
+lua_State *L = NULL;
+
 // Given a filename, generate a name for the output.
 static char *get_name(void *ctx, const char *name);
 
 static int process(struct inputfile *);
 
 static int eval_symbol(struct blam *blam, const char *sym, int len);
+static int init_symbols(void);
 
 int
 main(int argc, char **argv) {
 	int i;
 	struct inputfile *cur = NULL, *first = NULL;
+
+	L = lua_open();
+	luaL_openlibs(L);
+	init_symbols();
 
 	/* Get options */
 	/* FIXME: Use getopt? */
@@ -82,6 +103,24 @@ get_name(void *ctx, const char *name) {
 	return outfile;
 }
 
+/**
+ * Initialise the predefined symbols.  At the moment we have the galvanise ones
+ * only.
+ */
+static int
+init_symbols(void) {
+	int i;
+	assert(L);
+	if (!L) return -1;
+	
+	for (i = 0 ; i < N_PREDEF_SYMS ; i ++) {
+		lua_pushstring(L, predef_symbols[i].value);
+		lua_setglobal(L, predef_symbols[i].symbol);
+		lua_pop(L, 1);
+	}
+	return 0;
+}
+
 static int
 process(struct inputfile *inputfile) {
 	int fd;
@@ -110,6 +149,7 @@ process(struct inputfile *inputfile) {
 		// FIXME: Currently allow all non-whitespace
 		nbytes = strcspn(p, " \n\t");
 		eval_symbol(blam, p, nbytes);
+		p += nbytes;
 	}	
 
 	munmap((void *)inaddr, st.st_size);
@@ -121,14 +161,18 @@ process(struct inputfile *inputfile) {
 static int
 eval_symbol(struct blam *blam, const char *sym, int len) {
 	const char *value = NULL;
+	char buf[len + 1];
+	
+	memcpy(buf, sym, len);
+	buf[len] = 0;
 
-	if (len == 9 && strncmp(sym, "GALVINISE", len) == 0) {
-		value  = "Galvinise 0.1";
-	} else if (len == 15 && strncmp(sym, "GALVINISE_PANTS", len) == 0) {
-		value = "Pants On!";
+	lua_getglobal(L, buf);
+	if (lua_isstring(L, -1)) {
+		value = lua_tostring(L, -1);
 	} else {
-		printf("Value not found\n");
+		printf("Could not find %.*s\n", len, sym);
 	}
+	lua_pop(L, 1);
 
 	if (value)
 		blam->write(blam, value, strlen(value));
