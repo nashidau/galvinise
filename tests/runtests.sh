@@ -3,6 +3,6 @@
 
 
 for i in *.gvz ; do
-	../src/galv $i && diff `basename $i .gvz` `basename $i .gvz`.expect
+	../src/galv $i && diff -u `basename $i .gvz` `basename $i .gvz`.expect
 done
 
