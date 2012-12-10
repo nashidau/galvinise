@@ -46,6 +46,7 @@ lua_State *L = NULL;
 static char *get_name(void *ctx, const char *name);
 
 static int process(struct inputfile *);
+static int process_file(struct blam *, struct inputfile *);
 
 static int eval_symbol(struct blam *blam, const char *sym, int len);
 static int eval_lua(struct blam *blam, const char *sym, int len);
@@ -134,20 +135,38 @@ init_symbols(void) {
 
 static int
 process(struct inputfile *inputfile) {
+	struct blam *blam;
+
+	blam = blam_init(inputfile, inputfile->outfile);
+	// FIXME: Should be in the registry
+	lua_pushlightuserdata(L, blam);
+	lua_setglobal(L, "blam");
+
+	process_file(blam, inputfile);
+	
+	lua_pushnil(L);
+	lua_setglobal(L, "blam");
+
+	blam->close(blam);
+	return 0;
+}
+
+
+
+static int
+process_file(struct blam *blam, struct inputfile *inputfile) {
 	int fd;
 	const char *inaddr, *end;
 	const char *p;
 	const char *test;
 	int nbytes;
 	struct stat st;
-	struct blam *blam;
 
 	fd = open(inputfile->name, O_RDONLY);
 	fstat(fd, &st);
 	inaddr = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	close(fd);
-	
-	blam = blam_init(inputfile, inputfile->outfile);
+
 
 	p = inaddr;
 	end = p + st.st_size;
@@ -165,13 +184,14 @@ process(struct inputfile *inputfile) {
 		if (*test == '{') {
 			p += 2;
 			test = p;
+			nbytes = 0;
 			do {
-				nbytes = 0;
 				nbytes += strcspn(test, "}");
-				test += nbytes;
+				test = p + nbytes;
 			} while (test[1] != '}');
 			eval_lua(blam, p, nbytes);
-			p += nbytes + 2;
+			p += 2;
+			p += nbytes;
 		} else {
 			// FIXME: Currently allow all non-whitespace
 			p ++;
@@ -181,8 +201,8 @@ process(struct inputfile *inputfile) {
 		}
 	}	
 
+
 	munmap((void *)inaddr, st.st_size);
-	blam->close(blam);
 
 	return 0;	
 }
@@ -211,25 +231,40 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 // FIXME: Should get the line number or something.
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
-	printf("Code is '%.*s'\n", len, block);
-	printf("%d bytes\n", len);
-
 	luaL_loadbuffer(L, block, len, "some block you know");
-	lua_pcall(L, 0, LUA_MULTRET, 0);
-	printf("%s", lua_tostring(L, -1));
-	blam->write(blam, lua_tostring(L, -1), strlen(lua_tostring(L, -1)));
+	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
+	if (lua_isstring(L, -1)) {
+		printf("%s", lua_tostring(L, -1));
+		blam->write_string(blam, lua_tostring(L, -1));
+	}
 
 	return 0;
 }
 
 
-
+/**
+ * Include another file at the current location.
+ *
+ * FIXME: Recursion.
+ */
 static int
 galv_lua_include(lua_State *L) {
+	struct blam *blam;
 	const char *name;
+	struct inputfile include;
 
 	name = lua_tostring(L, lua_gettop(L));
 	printf("Name is %s\n", name);
 
-	return 0;
+	include.name = name;
+	include.outfile = NULL;
+	include.next = NULL;
+	lua_getglobal(L, "blam"); // FIXME: check
+	blam = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	process_file(blam, &include);
+
+	// This is horribl;y wrong	
+	lua_pushstring(L, "");
+	return 1;
 }
