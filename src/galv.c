@@ -33,6 +33,13 @@ static struct predef_symbols {
 };
 #define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
 
+static int galv_lua_include(lua_State *L);
+
+static const luaL_Reg methods[] = {
+	{ "include",	galv_lua_include },
+	{ NULL, NULL },
+};
+
 lua_State *L = NULL;
 
 // Given a filename, generate a name for the output.
@@ -41,6 +48,7 @@ static char *get_name(void *ctx, const char *name);
 static int process(struct inputfile *);
 
 static int eval_symbol(struct blam *blam, const char *sym, int len);
+static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 
 int
@@ -118,6 +126,9 @@ init_symbols(void) {
 		lua_setglobal(L, predef_symbols[i].symbol);
 		lua_pop(L, 1);
 	}
+
+	lua_getglobal(L, "_G");
+	luaL_openlib(L, NULL, methods, 0);
 	return 0;
 }
 
@@ -126,6 +137,7 @@ process(struct inputfile *inputfile) {
 	int fd;
 	const char *inaddr, *end;
 	const char *p;
+	const char *test;
 	int nbytes;
 	struct stat st;
 	struct blam *blam;
@@ -141,15 +153,32 @@ process(struct inputfile *inputfile) {
 	end = p + st.st_size;
 
 	while (p < end) {
-		nbytes = strcspn(p, "$");
+		nbytes = strcspn(p, "${");
+		test = p + nbytes;
 		blam->write(blam, p, nbytes);
 		p += nbytes;
 		if (p == end) break;
-		p ++;
-		// FIXME: Currently allow all non-whitespace
-		nbytes = strcspn(p, " \n\t");
-		eval_symbol(blam, p, nbytes);
-		p += nbytes;
+		if (*test == '{' && test[1] != '{') {
+			// Just a brace, continue on
+			continue;
+		}
+		if (*test == '{') {
+			p += 2;
+			test = p;
+			do {
+				nbytes = 0;
+				nbytes += strcspn(test, "}");
+				test += nbytes;
+			} while (test[1] != '}');
+			eval_lua(blam, p, nbytes);
+			p += nbytes + 2;
+		} else {
+			// FIXME: Currently allow all non-whitespace
+			p ++;
+			nbytes = strcspn(p, " \n\t");
+			eval_symbol(blam, p, nbytes);
+			p += nbytes;
+		}
 	}	
 
 	munmap((void *)inaddr, st.st_size);
@@ -179,3 +208,28 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 	return 0;
 }
 
+// FIXME: Should get the line number or something.
+static int
+eval_lua(struct blam *blam, const char *block, int len) {
+	printf("Code is '%.*s'\n", len, block);
+	printf("%d bytes\n", len);
+
+	luaL_loadbuffer(L, block, len, "some block you know");
+	lua_pcall(L, 0, LUA_MULTRET, 0);
+	printf("%s", lua_tostring(L, -1));
+	blam->write(blam, lua_tostring(L, -1), strlen(lua_tostring(L, -1)));
+
+	return 0;
+}
+
+
+
+static int
+galv_lua_include(lua_State *L) {
+	const char *name;
+
+	name = lua_tostring(L, lua_gettop(L));
+	printf("Name is %s\n", name);
+
+	return 0;
+}
