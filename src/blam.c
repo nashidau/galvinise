@@ -1,9 +1,9 @@
 /* Helper library to manage array of iov */
 #include <fcntl.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 
 #include <talloc.h>
 
@@ -15,6 +15,7 @@ struct blam_internal {
 };
 
 static int blam_method_write(struct blam *, const void *data, int len);
+static int blam_method_write_string(struct blam *, const char *data);
 static int blam_method_flush(struct blam *);
 static int blam_method_close(struct blam *);
 
@@ -24,6 +25,7 @@ blam_init(void *ctx, const char *file) {
 	if (!blam) return NULL;
 
 	blam->blam.write = blam_method_write;
+	blam->blam.write_string = blam_method_write_string;
 	blam->blam.flush = blam_method_flush;
 	blam->blam.close = blam_method_close;
 
@@ -44,6 +46,12 @@ blam_method_write(struct blam *b, const void *data, int len) {
 	struct blam_internal *blam = talloc_get_type(b, struct blam_internal);
 	return write(blam->fd, data, len);
 }
+
+static int
+blam_method_write_string(struct blam *b, const char *data) {
+	return b->write(b, data, strlen(data));
+}
+
 static int
 blam_method_flush(struct blam *x) {
 	return 0;
