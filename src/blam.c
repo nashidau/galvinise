@@ -30,7 +30,7 @@ blam_init(void *ctx, const char *file) {
 	if (!file) {
 		blam->fd = STDOUT_FILENO;
 	} else {
-		blam->fd = creat(file, 0777);
+		blam->fd = creat(file, 0666);
 		if (blam->fd == -1) {
 			perror("creat()");
 			return NULL;
