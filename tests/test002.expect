@@ -1,0 +1,5 @@
+Test of basic evaluations:
+No evaluation: GALVINISE
+Eval to version string: 0.1
+Eval to currenty pants status: On
+Eval in middle of line: Galvinise 0.1 some value
