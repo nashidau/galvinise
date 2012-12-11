@@ -179,6 +179,8 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 		if (p == end) break;
 		if (*test == '{' && test[1] != '{') {
 			// Just a brace, continue on
+			blam->write(blam, "{", 1);
+			p ++;
 			continue;
 		}
 		if (*test == '{') {
@@ -187,10 +189,11 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 			nbytes = 0;
 			do {
 				nbytes += strcspn(test, "}");
+				nbytes += 1;
 				test = p + nbytes;
-			} while (test[1] != '}');
-			eval_lua(blam, p, nbytes);
-			p += 2;
+			} while (*test != '}');
+			eval_lua(blam, p, nbytes - 1);
+			p += 1;
 			p += nbytes;
 		} else {
 			// FIXME: Currently allow all non-whitespace
@@ -234,9 +237,9 @@ eval_lua(struct blam *blam, const char *block, int len) {
 	luaL_loadbuffer(L, block, len, "some block you know");
 	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
 	if (lua_isstring(L, -1)) {
-		printf("%s", lua_tostring(L, -1));
 		blam->write_string(blam, lua_tostring(L, -1));
 	}
+	lua_pop(L, 1);
 
 	return 0;
 }
