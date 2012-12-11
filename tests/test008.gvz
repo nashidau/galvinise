@@ -1,0 +1,15 @@
+Define closure, then call it a few times
+
+{{
+	do
+		local count = 0
+		foo = function () 
+			count = count + 1;
+			return string.format("%d", count);
+		end
+	end
+}}
+
+1: {{return foo()}}
+2: {{return foo()}}
+3: {{return foo()}}

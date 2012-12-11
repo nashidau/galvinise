@@ -1,0 +1,3 @@
+Set value, then print it
+{{background = "Elvis"}}
+$background
