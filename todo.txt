@@ -1,7 +1,6 @@
 Todo for Galvinise
 
- - Implement a way of setting easily:
-	- $$foo = var maybe?
-		- No, how to esacpe $ then?
+ - $foo() should work
+	- handle nested parens too 
  - Escaping of { and $?
  - Work on a CSS example
