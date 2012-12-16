@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <ctype.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,7 +50,9 @@ static char *get_name(void *ctx, const char *name);
 static int process(struct inputfile *);
 static int process_file(struct blam *, struct inputfile *);
 
+static int extract_symbol(const char *start, bool *iscall);
 static int eval_symbol(struct blam *blam, const char *sym, int len);
+static int eval_inline(struct blam *blam, const char *sym, int len);
 static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 
@@ -160,6 +164,7 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	const char *p;
 	const char *test;
 	int nbytes;
+	bool iscall;
 	struct stat st;
 
 	fd = open(inputfile->name, O_RDONLY);
@@ -196,10 +201,16 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 			p += 1;
 			p += nbytes;
 		} else {
-			// FIXME: Currently allow all non-whitespace
 			p ++;
-			nbytes = strcspn(p, " \n\t");
-			eval_symbol(blam, p, nbytes);
+			nbytes = extract_symbol(p, &iscall);
+			if (nbytes == 0) {
+				// Not a symbol
+				blam->write(blam, "$", 1);
+			} else if (iscall) {
+				eval_inline(blam, p, nbytes);
+			} else {
+				eval_symbol(blam, p, nbytes);
+			}
 			p += nbytes;
 		}
 	}	
@@ -210,11 +221,38 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	return 0;	
 }
 
+/* start points at the first character */
+static int
+extract_symbol(const char *start, bool *iscall) {
+	const char *p;
+	int depth = 0;
+
+	p = start;
+	while (isalnum(*p) || *p == '.' || *p == '_') {
+		p ++;
+	}
+
+	if (*p != '(') {
+		if (iscall) *iscall = false;
+		return p - start;
+	}
+
+	if (iscall) *iscall = true;
+
+	while (*p != ')' || depth > 1) {
+		if (*p == '(') depth ++;
+		if (*p == ')') depth --;
+		p ++;
+	}
+	p ++; // grab the last ')'
+	return p - start;
+}
+
 static int
 eval_symbol(struct blam *blam, const char *sym, int len) {
 	const char *value = NULL;
 	char buf[len + 1];
-	
+
 	memcpy(buf, sym, len);
 	buf[len] = 0;
 
@@ -222,6 +260,7 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 	if (lua_isstring(L, -1)) {
 		value = lua_tostring(L, -1);
 	} else {
+		// FIXME: This error bites
 		printf("Could not find %.*s\n", len, sym);
 	}
 	lua_pop(L, 1);
@@ -230,6 +269,28 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 		blam->write(blam, value, strlen(value));
 	return 0;
 }
+
+/**
+ * Evaluate an inline symbol of the form $foo(7)
+ */
+static int
+eval_inline(struct blam *blam, const char *sym, int len) {
+	char buf[len + 10]; // "return %s;"
+	strcpy(buf, "return ");
+	strncpy(buf + 7, sym, len);
+	buf[7 + len] = 0;
+
+	luaL_loadbuffer(L, buf, len + 7, buf);
+	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
+	if (lua_isstring(L, -1)) {
+		blam->write_string(blam, lua_tostring(L, -1));
+	} else {
+		printf("Didn't get a string back from inline\n");
+	}
+	lua_pop(L, 1);
+
+	return 0;
+}	
 
 // FIXME: Should get the line number or something.
 static int
@@ -257,7 +318,6 @@ galv_lua_include(lua_State *L) {
 	struct inputfile include;
 
 	name = lua_tostring(L, lua_gettop(L));
-	printf("Name is %s\n", name);
 
 	include.name = name;
 	include.outfile = NULL;
