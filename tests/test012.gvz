@@ -1,0 +1,4 @@
+Handle spurios dollars:
+ A $ with spaces
+ A { with spaces
+ Two { { with spaces

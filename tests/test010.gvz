@@ -1,0 +1,7 @@
+Next line should say "Pants"
+Define X {{x = function () return "Pants" end}}
+Double brace {{return x()}}
+Double brace {{return x()}}
+Double brace {{return x()}}
+Double brace {{return x()}}
+Dollar sign $x()

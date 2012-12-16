@@ -1,0 +1,12 @@
+Define closure, then call it a few times using $ notation {{
+	do
+		local count = 0
+		foo = function () 
+			count = count + 1;
+			return string.format("%d", count);
+		end
+	end
+}}
+1: $foo()
+2: {{return foo()}}
+3: $foo()
