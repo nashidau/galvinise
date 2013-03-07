@@ -80,7 +80,7 @@ main(int argc, char **argv) {
 			}
 			cur->name = argv[i];
 			cur->outfile = get_name(cur, cur->name);
-		}		
+		}
 	}
 
 	if (cur == NULL) {
