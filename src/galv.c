@@ -101,7 +101,7 @@ get_name(void *ctx, const char *name) {
 	char *outfile, *p, *q;
 
 	if ((p = strstr(name, ".gvz"))) {
-		outfile = talloc_size(ctx, strlen(name) - 3);	
+		outfile = talloc_size(ctx, strlen(name) - 3);
 		strncpy(outfile, name, p - name);
 		q = outfile + (p - name);
 		p += 4; /* sizeof(.gvz) */
@@ -125,7 +125,7 @@ init_symbols(void) {
 	int i;
 	assert(L);
 	if (!L) return -1;
-	
+
 	for (i = 0 ; i < N_PREDEF_SYMS ; i ++) {
 		lua_pushstring(L, predef_symbols[i].value);
 		lua_setglobal(L, predef_symbols[i].symbol);
@@ -147,7 +147,7 @@ process(struct inputfile *inputfile) {
 	lua_setglobal(L, "blam");
 
 	process_file(blam, inputfile);
-	
+
 	lua_pushnil(L);
 	lua_setglobal(L, "blam");
 
@@ -213,12 +213,12 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 			}
 			p += nbytes;
 		}
-	}	
+	}
 
 
 	munmap((void *)inaddr, st.st_size);
 
-	return 0;	
+	return 0;
 }
 
 /* start points at the first character */
@@ -290,7 +290,7 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 	lua_pop(L, 1);
 
 	return 0;
-}	
+}
 
 // FIXME: Should get the line number or something.
 static int
@@ -327,7 +327,7 @@ galv_lua_include(lua_State *L) {
 	lua_pop(L, 1);
 	process_file(blam, &include);
 
-	// This is horribl;y wrong	
+	// This is horribly wrong
 	lua_pushstring(L, "");
 	return 1;
 }
