@@ -1,4 +1,5 @@
 
+PREFIX=${HOME}
 
 PKGS=			\
 	talloc		\
@@ -14,6 +15,9 @@ SRCS= 			\
 
 galv: ${SRCS}
 	${CC} -std=c99 ${LDFLAGS} -o galv ${SRCS}
+
+install: galv
+	cp galv ${PREFIX}/bin
 
 clean:
 	rm -f *.o galv
