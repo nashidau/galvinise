@@ -78,6 +78,7 @@ main(int argc, char **argv) {
 				cur->next = talloc(cur, struct inputfile);
 				cur = cur->next;
 			}
+			cur->next = NULL;
 			cur->name = argv[i];
 			cur->outfile = get_name(cur, cur->name);
 		}
