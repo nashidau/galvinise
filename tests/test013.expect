@@ -1,0 +1,2 @@
+Assign foo.bar to String.
+foo.bar is 'String' (Should be string)

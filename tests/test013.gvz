@@ -1,0 +1,2 @@
+{{ foo = {}; foo.bar = "String" }}Assign foo.bar to String.
+foo.bar is '$foo.bar' (Should be string)
