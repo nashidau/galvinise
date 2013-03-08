@@ -4,3 +4,7 @@ Todo for Galvinise
 	- handle nested parens too 
  - Escaping of { and $?
  - Work on a CSS example
+ - Make $ aware of .  So foo.bar works.
+ - Context specific states:
+ 	C.foo is for the current file
+	N.foo is nested
