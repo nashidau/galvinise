@@ -55,6 +55,7 @@ static int eval_symbol(struct blam *blam, const char *sym, int len);
 static int eval_inline(struct blam *blam, const char *sym, int len);
 static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
+static int walk_symbol(const char *sym, int len);
 
 int
 main(int argc, char **argv) {
@@ -222,6 +223,9 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 }
 
 /* start points at the first character */
+/**
+ * process a $foo style symbol
+ */
 static int
 extract_symbol(const char *start, bool *iscall) {
 	const char *p;
@@ -248,6 +252,10 @@ extract_symbol(const char *start, bool *iscall) {
 	return p - start;
 }
 
+/**
+ * Eval a $ style symbol. The string passed in is the unprocessed symbol.
+ * It may include .
+ */
 static int
 eval_symbol(struct blam *blam, const char *sym, int len) {
 	const char *value = NULL;
@@ -256,7 +264,11 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 	memcpy(buf, sym, len);
 	buf[len] = 0;
 
-	lua_getglobal(L, buf);
+	if (walk_symbol(sym, len) != 0) {
+		printf("Error traversing %.*s\n", len, sym);
+		return -1;
+	}
+
 	if (lua_isstring(L, -1)) {
 		value = lua_tostring(L, -1);
 	} else {
@@ -288,6 +300,28 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 		printf("Didn't get a string back from inline\n");
 	}
 	lua_pop(L, 1);
+
+	return 0;
+}
+
+/**
+ * Given a lua string of the form x.y.z, gets x, then y, then z.  Returns z on
+ * top of the lua stack.  returns 0 on success.
+ */
+static int
+walk_symbol(const char *sym, int len) {
+	const char *p;
+	const char *end = sym + len;
+	int ind = LUA_GLOBALSINDEX;
+
+	do {
+		p = memchr(sym, '.', end - sym);
+		if (p == NULL) p = end;
+		lua_pushlstring(L, sym, p - sym);
+		lua_gettable(L, ind);
+		ind = lua_gettop(L);
+		sym = p + 1;
+	} while (p < end);
 
 	return 0;
 }
