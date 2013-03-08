@@ -130,7 +130,6 @@ init_symbols(void) {
 	for (i = 0 ; i < N_PREDEF_SYMS ; i ++) {
 		lua_pushstring(L, predef_symbols[i].value);
 		lua_setglobal(L, predef_symbols[i].symbol);
-		lua_pop(L, 1);
 	}
 
 	lua_getglobal(L, "_G");
