@@ -1,11 +1,20 @@
 Todo for Galvinise
 
  - $foo() should work
-	- handle nested parens too 
+	- handle quotes too
  - Escaping of { and $?
- - Work on a CSS example
+ - ${foo.bar} should work - be nice to shell users.
  - A nice comment method
- - Make $ aware of .  So foo.bar works.
  - Context specific states:
  	C.foo is for the current file
 	N.foo is nested
+ - Specific language modules
+ 	- CSS Colors is first
+	- CSS Prefixes is second.
+ - Bug:
+ 	- Don't close a {{ and it crashes
+	- Don't thik it cleans up stack properly for foo.bar.baz
+ - Bugs/Tests to check
+	 - FIlename parsing
+	 - Tree walking
+
