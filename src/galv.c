@@ -93,7 +93,7 @@ main(int argc, char **argv) {
 	}
 
 	for (cur = first ; cur ; cur = cur->next) {
-		printf("%s -> %s\n", cur->name, cur->outfile);
+		printf("Galvinising: %s -> %s\n", cur->name, cur->outfile);
 		process(cur);
 	}
 
