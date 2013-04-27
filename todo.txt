@@ -10,6 +10,8 @@ Todo for Galvinise
 	N.foo is nested
  - Specific language modules
  	- CSS Colors is first
+		- Lighter darker
+		- Color scheme builder/designer
 	- CSS Prefixes is second.
  - Bug:
  	- Don't close a {{ and it crashes
