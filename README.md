@@ -24,6 +24,9 @@ function invocation goes until it reaches the matching closing ).
 
 A $ followed by whitespace produces a $.
 
+{{ O("String format %d", 7) }} Outputs the formatted string.
+
+{{ Oraw("x", "y", "z") }} Outputs xyz.
 
 Predefined Values
 =================
