@@ -14,7 +14,7 @@ struct blam_internal {
 	int fd;
 };
 
-static int blam_method_write(struct blam *, const void *data, int len);
+static int blam_method_write(struct blam *, const void *data, size_t len);
 static int blam_method_write_string(struct blam *, const char *data);
 static int blam_method_flush(struct blam *);
 static int blam_method_close(struct blam *);
@@ -42,7 +42,7 @@ blam_init(void *ctx, const char *file) {
 }
 
 static int
-blam_method_write(struct blam *b, const void *data, int len) {
+blam_method_write(struct blam *b, const void *data, size_t len) {
 	struct blam_internal *blam = talloc_get_type(b, struct blam_internal);
 	return write(blam->fd, data, len);
 }
