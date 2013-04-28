@@ -36,9 +36,11 @@ static struct predef_symbols {
 #define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
 
 static int galv_lua_include(lua_State *L);
+static int galv_lua_outraw(lua_State *L);
 
 static const luaL_Reg methods[] = {
 	{ "include",	galv_lua_include },
+	{ "Oraw",	galv_lua_outraw },
 	{ NULL, NULL },
 };
 
@@ -368,6 +370,32 @@ galv_lua_include(lua_State *L) {
 	return 1;
 }
 
+/**
+ * Send a string to blam to out to output.
+ *
+ */
+static int
+galv_lua_outraw(lua_State *L) {
+	struct blam *blam;
+	int i, n;
+	size_t len;
+	const char *str;
+
+	n = lua_gettop(L);
+	/* FIXME: I should use the registry for this */
+	lua_getglobal(L, "blam"); // FIXME: check
+	blam = lua_touserdata(L, -1);
+
+	for (i = 0 ; i < n ; i ++) {
+		str = lua_tolstring(L, n, &len);
+		blam->write(blam, str, len);
+	}
+
+	// Make sure strings are valid
+	blam->flush(blam);
+
+	return 0;
+}
 
 
 int
