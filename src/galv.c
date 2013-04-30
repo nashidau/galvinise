@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -173,8 +174,21 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	struct stat st;
 
 	fd = open(inputfile->name, O_RDONLY);
+	if (fd == -1) {
+		fprintf(stderr, "Unable to open '%s': %s\n", inputfile->name,
+				strerror(errno));
+		return -1;
+	}
+
 	fstat(fd, &st);
 	inaddr = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	if (inaddr == MAP_FAILED) {
+		printf("Unable to mmap %s: %s", inputfile->name,
+				strerror(errno));
+		// FIXME: Fall back to slurp into memory.
+		close(fd);
+		return -1;
+	}
 	close(fd);
 
 
@@ -363,10 +377,11 @@ galv_lua_include(lua_State *L) {
 	lua_getglobal(L, "blam"); // FIXME: check
 	blam = lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	process_file(blam, &include);
+	if (process_file(blam, &include)) {
+		exit(1);
+	}
 
-	// This is horribly wrong
-	lua_pushstring(L, "");
+	lua_pushboolean(L, 1);
 	return 1;
 }
 
