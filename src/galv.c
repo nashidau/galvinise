@@ -183,7 +183,7 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	fstat(fd, &st);
 	inaddr = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (inaddr == MAP_FAILED) {
-		printf("Unable to mmap %s: %s", inputfile->name,
+		printf("Unable to mmap %s: %s\n", inputfile->name,
 				strerror(errno));
 		// FIXME: Fall back to slurp into memory.
 		close(fd);
