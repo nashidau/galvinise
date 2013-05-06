@@ -238,7 +238,6 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 		}
 	}
 
-
 	munmap((void *)inaddr, st.st_size);
 
 	return 0;
