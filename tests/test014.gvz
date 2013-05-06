@@ -1,0 +1,5 @@
+{{-- Set a var here, print in included file
+	foo = 7;
+ 	include[[test014.include]]
+ }}
+

@@ -1,0 +1,5 @@
+Comment parser breakage:
+	{- Not a comment
+	-{ Also not a comment
+Comments:
+	{-{ {-{ }-{ -} } } --} }}Here.

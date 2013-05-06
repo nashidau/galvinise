@@ -59,6 +59,7 @@ static int eval_inline(struct blam *blam, const char *sym, int len);
 static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 static int walk_symbol(const char *sym, int len);
+static const char *slurp_comment(const char *p);
 
 void galv_stack_dump(lua_State *lua,const char *msg,...);
 
@@ -197,17 +198,20 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 
 	while (p < end) {
 		nbytes = strcspn(p, "${");
-		test = p + nbytes;
 		blam->write(blam, p, nbytes);
 		p += nbytes;
+		test = p;
 		if (p == end) break;
-		if (*test == '{' && test[1] != '{') {
-			// Just a brace, continue on
-			blam->write(blam, "{", 1);
-			p ++;
+		if (*p != '$' && strncmp(p, "{{", 2) && strncmp(p, "{-{", 3)) {
+			blam->write(blam, p, 2);
+			p += 2;
 			continue;
 		}
-		if (*test == '{') {
+
+		/* FIXME: Test this throughly */
+		if (strncmp(p, "{-{", 3) == 0) {
+			p = slurp_comment(test + 3);
+		} else if (*test == '{') {
 			p += 2;
 			test = p;
 			nbytes = 0;
@@ -239,6 +243,31 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 
 	return 0;
 }
+
+/**
+ *  Read in the length of a comment.
+ *
+ *  @p The opening byte of the comment.
+ *  @returns The first byte after the comment.
+ */
+static const char *
+slurp_comment(const char *p) {
+	while (true) {
+		p = index(p, '}');
+		if (p[1] == '-' && p[2] == '}') {
+			return p + 3;
+		} else if (p[1] == '}') {
+			return p + 2;
+		}
+		p ++;
+	}
+
+	// FIXME: Check length of buffer.
+	// FIXME: Handle this error
+	assert(!"Unterminated comment");
+	return p;
+}
+
 
 /* start points at the first character */
 /**

@@ -20,6 +20,8 @@ $foo prints the value of foo.  (See predefined values below).
 If you want to call a function, you can do $foo(arg1, arg2, et, al).  The
 function invocation goes until it reaches the matching closing ).
 
+{-{ }-} or {-{ }} is a comment.  No output will be produced.
+
 {{include "file"}} includes a file.
 
 A $ followed by whitespace produces a $.
