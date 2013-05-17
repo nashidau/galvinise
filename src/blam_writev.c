@@ -56,6 +56,7 @@ blam_writev_init(void *ctx, int nvec, const char *file) {
 	} else {
 		blam->fd = creat(file, 0666);
 		if (blam->fd == -1) {
+			talloc_free(blam);
 			perror("creat()");
 			return NULL;
 		}
