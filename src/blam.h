@@ -9,6 +9,6 @@ struct blam {
 	int (*close)(struct blam *);
 };
 
-#define blam_init(ctx, file)	blam_writev_init(ctx, -1, file)
+#define blam_init(ctx, file)	blam_direct_init(ctx, file)
 struct blam *blam_direct_init(void *ctx, const char *file);
 struct blam *blam_writev_init(void *ctx, int nvec, const char *file);
