@@ -8,5 +8,7 @@ struct blam {
 	int (*flush)(struct blam *);
 	int (*close)(struct blam *);
 };
-struct blam *blam_init(void *ctx, const char *file);
 
+#define blam_init(ctx, file)	blam_writev_init(ctx, -1, file)
+struct blam *blam_direct_init(void *ctx, const char *file);
+struct blam *blam_writev_init(void *ctx, int nvec, const char *file);

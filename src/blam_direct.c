@@ -20,7 +20,7 @@ static int blam_method_flush(struct blam *);
 static int blam_method_close(struct blam *);
 
 struct blam *
-blam_init(void *ctx, const char *file) {
+blam_direct_init(void *ctx, const char *file) {
 	struct blam_internal *blam = talloc_zero(ctx, struct blam_internal);
 	if (!blam) return NULL;
 

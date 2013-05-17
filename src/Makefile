@@ -11,7 +11,8 @@ LDFLAGS+=`pkg-config --libs ${PKGS}`
 
 SRCS= 			\
 	galv.o	\
-	blam.o
+	blam_direct.o	\
+	blam_writev.o
 
 galv: ${SRCS}
 	${CC} -std=c99 ${LDFLAGS} -o galv ${SRCS}
