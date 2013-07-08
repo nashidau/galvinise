@@ -255,8 +255,6 @@ slurp_comment(const char *p) {
 		p = index(p, '}');
 		if (p[1] == '-' && p[2] == '}') {
 			return p + 3;
-		} else if (p[1] == '}') {
-			return p + 2;
 		}
 		p ++;
 	}
