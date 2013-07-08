@@ -60,7 +60,7 @@ static int eval_inline(struct blam *blam, const char *sym, int len);
 static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 static int walk_symbol(const char *sym, int len);
-static const char *slurp_comment(const char *p);
+static const char *slurp_comment(const char *p, const char *end);
 
 void galv_stack_dump(lua_State *lua,const char *msg,...);
 
@@ -222,7 +222,8 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 
 		/* FIXME: Test this throughly */
 		if (strncmp(p, "{-{", 3) == 0) {
-			p = slurp_comment(test + 3);
+			p = slurp_comment(test + 3, end);
+			if (p == NULL) p = end;
 		} else if (*test == '{') {
 			p += 2;
 			test = p;
@@ -251,7 +252,7 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	}
 
 	if (useread)
-		talloc_free(inaddr);
+		talloc_free((void *)inaddr);
 	else
 		munmap((void *)inaddr, st.st_size);
 
@@ -262,12 +263,17 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
  *  Read in the length of a comment.
  *
  *  @p The opening byte of the comment.
- *  @returns The first byte after the comment.
+ *  @returns The first byte after the comment or NULL
  */
 static const char *
-slurp_comment(const char *p) {
+slurp_comment(const char *p, const char *end) {
 	while (true) {
-		p = index(p, '}');
+		p = memchr(p, '}', end - p);
+		if (p == NULL) {
+			// Terminator not fou
+			printf("End of comment not found\n");
+			return NULL;
+		}
 		if (p[1] == '-' && p[2] == '}') {
 			return p + 3;
 		}
