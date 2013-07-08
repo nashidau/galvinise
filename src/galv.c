@@ -164,7 +164,6 @@ process(struct inputfile *inputfile) {
 }
 
 
-
 static int
 process_file(struct blam *blam, struct inputfile *inputfile) {
 	static bool useread = false;
@@ -251,7 +250,10 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 		}
 	}
 
-	munmap((void *)inaddr, st.st_size);
+	if (useread)
+		talloc_free(inaddr);
+	else
+		munmap((void *)inaddr, st.st_size);
 
 	return 0;
 }
