@@ -17,6 +17,7 @@
 #include <lauxlib.h>
 
 #include "galv.h"
+#include "diskslurp.h"
 
 int DEBUG_LEVEL = 1;
 
@@ -166,6 +167,7 @@ process(struct inputfile *inputfile) {
 
 static int
 process_file(struct blam *blam, struct inputfile *inputfile) {
+	static bool useread = false;
 	int fd;
 	const char *inaddr, *end;
 	const char *p;
@@ -182,16 +184,27 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 	}
 
 	fstat(fd, &st);
-	inaddr = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (inaddr == MAP_FAILED) {
-		printf("Unable to mmap %s: %s\n", inputfile->name,
-				strerror(errno));
-		// FIXME: Fall back to slurp into memory.
-		close(fd);
-		return -1;
+	
+	inaddr = MAP_FAILED;
+	if (!useread) {
+		inaddr = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+		if (inaddr == MAP_FAILED) {
+			if (useread) {
+				printf("Unable to mmap %s: %s\n",
+						inputfile->name,
+						strerror(errno));
+				printf("Falling back to read from here");
+				useread = true;
+			}
+		}
 	}
+	if (inaddr == MAP_FAILED)
+		inaddr = diskslurp(fd, st.st_size);
+
 	close(fd);
 
+	if (inaddr == NULL || inaddr == MAP_FAILED)
+		return -1;
 
 	p = inaddr;
 	end = p + st.st_size;

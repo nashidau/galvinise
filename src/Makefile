@@ -10,7 +10,8 @@ LDFLAGS+=`pkg-config --libs ${PKGS}`
 
 
 SRCS= 			\
-	galv.o	\
+	galv.o		\
+	diskslurp.o	\
 	blam_direct.o	\
 	blam_writev.o
 
