@@ -264,6 +264,8 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
  *
  *  @p The opening byte of the comment.
  *  @returns The first byte after the comment or NULL
+ * FIXME: Can still fall of the end if } is last character.
+ *  Should use end - 3 or something.
  */
 static const char *
 slurp_comment(const char *p, const char *end) {

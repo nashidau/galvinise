@@ -17,6 +17,7 @@ Todo for Galvinise
  	- Don't close a {{ and it crashes
 	- Don't thik it cleans up stack properly for foo.bar.baz
  - Bugs/Tests to check
-	 - FIlename parsing
-	 - Tree walking
+	- Filename parsing
+	- Tree walking
+	- Test end of file when slurping comments
 
