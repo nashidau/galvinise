@@ -484,8 +484,7 @@ galv_lua_outraw(lua_State *L) {
 	return 0;
 }
 
-
-int
+static int
 galv_table_count(lua_State *lua, int table){
         int count = 0;
         if (!lua_istable(lua, table))
@@ -497,9 +496,6 @@ galv_table_count(lua_State *lua, int table){
         }
         return count;
 }
-
-
-
 
 void
 galv_stack_dump(lua_State *lua,const char *msg,...){
