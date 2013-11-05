@@ -338,7 +338,6 @@ extract_symbol(const char *start, bool *iscall) {
  */
 static int
 eval_symbol(struct blam *blam, const char *sym, int len) {
-	const char *value = NULL;
 	char buf[len + 1];
 
 	memcpy(buf, sym, len);
