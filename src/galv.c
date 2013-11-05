@@ -34,6 +34,7 @@ static struct predef_symbols {
 	{ "GALVINISE", "Galvinise 0.1" },
 	{ "GALVINISE_VERSION", "0.1" },
 	{ "PANTS", "On" },
+	{ "$", "$" },
 };
 #define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
 
@@ -237,7 +238,14 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 			p += 1;
 			p += nbytes;
 		} else {
+			// Handle '$'
 			p ++;
+			if (*p == '$') {
+				// $$ outputs $
+				blam->write(blam, "$", 1);
+				p ++;
+				continue;
+			}
 			nbytes = extract_symbol(p, &iscall);
 			if (nbytes == 0) {
 				// Not a symbol
