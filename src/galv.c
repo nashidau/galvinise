@@ -64,6 +64,7 @@ static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 static int walk_symbol(const char *sym, int len);
 static const char *slurp_comment(const char *p, const char *end);
+static int write_object(struct blam *blam, lua_State *L, int index);
 
 void galv_stack_dump(lua_State *lua,const char *msg,...);
 
@@ -311,7 +312,7 @@ extract_symbol(const char *start, bool *iscall) {
 	int depth = 0;
 
 	p = start;
-	while (isalnum(*p) || *p == '.' || *p == '_') {
+	while (isalnum(*p) || *p == '.' || *p == ':' || *p == '_') {
 		p ++;
 	}
 
@@ -354,21 +355,10 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 		return -1;
 	}
 
-	if (lua_isstring(L, -1)) {
-		value = lua_tostring(L, -1);
-	} else if (lua_isuserdata(L, -1)) {
-		// FIXME: Other types
-		luaL_callmeta(L, -1, "__tostring");
-		value = lua_tostring(L, -1);
-		lua_pop(L, 1);
-	} else {
-		value = "Can't handle this type";
-	}
+	write_object(blam, L, -1);
 
 	lua_pop(L, 1);
 
-	if (value)
-		blam->write(blam, value, strlen(value));
 	return 0;
 }
 
@@ -384,14 +374,31 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 
 	luaL_loadbuffer(L, buf, len + 7, buf);
 	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
-	if (lua_isstring(L, -1)) {
-		blam->write_string(blam, lua_tostring(L, -1));
-	} else {
-		printf("Didn't get a string back from inline\n");
-	}
+	write_object(blam, L, -1);
 	lua_pop(L, 1);
 
 	return 0;
+}
+
+static int
+write_object(struct blam *blam, lua_State *L, int index) {
+	const char *value = NULL;
+	size_t len;
+
+	if (lua_isstring(L, -1)) {
+		value = lua_tolstring(L, -1, &len);
+	} else if (lua_isuserdata(L, -1)) {
+		// FIXME: Other types
+		luaL_callmeta(L, -1, "__tostring");
+		value = lua_tolstring(L, -1, &len);
+		lua_pop(L, 1);
+	} else {
+		value = "Can't handle this type";
+	}
+
+	if (value)
+		blam->write(blam, value, len);
+	return !!value;
 }
 
 /**
