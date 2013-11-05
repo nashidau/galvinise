@@ -17,6 +17,8 @@
 #include <lauxlib.h>
 
 #include "galv.h"
+// FIXME: This should be in modules.h or similar
+#include "modules/css/colours.h"
 #include "diskslurp.h"
 
 int DEBUG_LEVEL = 1;
@@ -73,6 +75,8 @@ main(int argc, char **argv) {
 	L = lua_open();
 	luaL_openlibs(L);
 	init_symbols();
+
+	colours_init(L);
 
 	/* Get options */
 	/* FIXME: Use getopt? */

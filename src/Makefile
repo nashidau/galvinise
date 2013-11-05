@@ -23,4 +23,4 @@ install: galv
 	cp galv ${PREFIX}/bin
 
 clean:
-	rm -f *.o galv
+	rm -f *.o **/*.o galv
