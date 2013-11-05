@@ -344,12 +344,23 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 		return -1;
 	}
 
+	if (lua_isnil(L, -1)) {
+		printf("Could not find '%.*s'\n", len, sym);
+		lua_pop(L, 1);
+		return -1;
+	}
+
 	if (lua_isstring(L, -1)) {
 		value = lua_tostring(L, -1);
+	} else if (lua_isuserdata(L, -1)) {
+		// FIXME: Other types
+		luaL_callmeta(L, -1, "__tostring");
+		value = lua_tostring(L, -1);
+		lua_pop(L, 1);
 	} else {
-		// FIXME: This error bites
-		printf("Could not find %.*s\n", len, sym);
+		value = "Can't handle this type";
 	}
+
 	lua_pop(L, 1);
 
 	if (value)
