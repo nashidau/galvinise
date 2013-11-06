@@ -1,7 +1,5 @@
 {{
-	v = {} 
 	for i = 0, 255 do
-		v[i] = rgba(i,i,i,i);
+		Oraw(rgba(i,i,i,i), "\n")
 	end
 }}
-$v[0]
