@@ -66,14 +66,38 @@ colour_alloc(lua_State *L) {
 static int
 colours_new_colour(lua_State *L) {
 	struct colour *c;
+	int n;
 
 	c = colour_alloc(L);
 
-	// For now, require 4 args
-	c->r = lua_tointeger(L, 1);
-	c->g = lua_tointeger(L, 2);
-	c->b = lua_tointeger(L, 3);
-	c->a = lua_tonumber(L, 4);
+	n = lua_gettop(L);
+	if (n < 1) {
+		lua_pushnil(L);
+		lua_pushstring("Must pass an argument");
+		return 0;
+	}
+
+	switch (n) {
+	case 1:
+		c->r = c->g = c->b = lua_tointeger(L, 1);
+		c->a = 1;
+		break;
+	case 2:
+		c->r = c->g = c->b = lua_tointeger(L, 1);
+		c->a = lua_tonumber(L, 2);
+		break;
+	case 3:
+		c->r = lua_tointeger(L, 1);
+		c->g = lua_tointeger(L, 2);
+		c->b = lua_tointeger(L, 3);
+		c->a = 1;
+	default:
+		// 4 or more
+		c->r = lua_tointeger(L, 1);
+		c->g = lua_tointeger(L, 2);
+		c->b = lua_tointeger(L, 3);
+		c->a = lua_tonumber(L, 4);
+	}
 
 	return 1;
 }
