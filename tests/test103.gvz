@@ -1,0 +1,7 @@
+{{
+	v = {} 
+	for i = 0, 255 do
+		v[i] = rgba(i,i,i,i);
+	end
+}}
+$v[0]
