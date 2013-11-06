@@ -42,5 +42,4 @@ Predefined Values
 Future Work
 ===========
 
-   * hould foo.gvz.html produce foo.html?  Yes probably.
-   * How to print a $ value which is not code.
+   * Should foo.gvz.html produce foo.html?  Yes probably.
