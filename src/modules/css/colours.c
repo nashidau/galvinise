@@ -13,7 +13,8 @@
 #define MODULE_NAME	"colours"
 
 struct colour {
-	uint8_t r,g,b,a;
+	uint8_t r,g,b;
+	float a;
 };
 
 static int colours_new_colour(lua_State *L);
@@ -72,7 +73,7 @@ colours_new_colour(lua_State *L) {
 	c->r = lua_tointeger(L, 1);
 	c->g = lua_tointeger(L, 2);
 	c->b = lua_tointeger(L, 3);
-	c->a = lua_tointeger(L, 4);
+	c->a = lua_tonumber(L, 4);
 
 	return 1;
 }
@@ -85,11 +86,11 @@ colours_tostring(lua_State *L) {
 	if (!c) {
 		return luaL_error(L, "Not a colour");
 	}
-	if (c->a == 255) {
+	if (c->a >= 1) {
 		lua_pushfstring(L, "rgb(%d,%d,%d)", c->r, c->g, c->b);
 	} else {
-		len = snprintf(buf,sizeof(buf),"rgba(%d,%d,%d,%0.2f)",
-				c->r,c->g,c->b,c->a/255.0);
+		len = snprintf(buf,sizeof(buf),"rgba(%d,%d,%d,%0.2g)",
+				c->r,c->g,c->b,c->a);
 		lua_pushlstring(L, buf, len);
 	}
 	return 1;

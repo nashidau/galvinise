@@ -1,5 +1,5 @@
 {{
 	for i = 0, 255 do
-		Oraw(rgba(i,i,i,i), "\n")
+		Oraw(rgba(i,i,i,1), "\n")
 	end
 }}
