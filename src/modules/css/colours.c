@@ -85,8 +85,13 @@ colours_tostring(lua_State *L) {
 	if (!c) {
 		return luaL_error(L, "Not a colour");
 	}
-	len = snprintf(buf,sizeof(buf),"rgba(%d,%d,%d,%0.2f)",c->r,c->g,c->b,c->a/255.0);
-	lua_pushlstring(L, buf, len);
+	if (c->a == 255) {
+		lua_pushfstring(L, "rgb(%d,%d,%d)", c->r, c->g, c->b);
+	} else {
+		len = snprintf(buf,sizeof(buf),"rgba(%d,%d,%d,%0.2f)",
+				c->r,c->g,c->b,c->a/255.0);
+		lua_pushlstring(L, buf, len);
+	}
 	return 1;
 }
 
