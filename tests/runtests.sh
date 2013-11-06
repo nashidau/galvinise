@@ -3,7 +3,7 @@ set -e
 
 
 for i in test???.gvz ; do
-	../src/galv $i && diff -u `basename $i .gvz` `basename $i .gvz`.expect
+	../src/galv $i && diff -u `basename $i .gvz`.expect `basename $i .gvz`
 done
 
 for i in testF???.gvz ; do
