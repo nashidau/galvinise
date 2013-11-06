@@ -387,15 +387,39 @@ write_object(struct blam *blam, lua_State *L, int index) {
 	const char *value = NULL;
 	size_t len;
 
-	if (lua_isstring(L, -1)) {
-		value = lua_tolstring(L, -1, &len);
-	} else if (lua_isuserdata(L, -1)) {
-		// FIXME: Other types
-		luaL_callmeta(L, -1, "__tostring");
+	switch (lua_type(L, index)) {
+	case LUA_TNIL:
+		value = "nil"; len = 3;
+		break;
+	case LUA_TNUMBER:
+	case LUA_TSTRING:
+		value = lua_tolstring(L, index, &len);
+		break;
+	case LUA_TBOOLEAN:
+		if (lua_toboolean(L, index)) {
+			value = "true";
+			len = 4;
+		} else {
+			value = "false";
+			len = 5;
+		}
+		break;
+	case LUA_TLIGHTUSERDATA:
+		value = "user data";
+		len = 9;
+		break;
+	case LUA_TUSERDATA:
+		luaL_callmeta(L, index, "__tostring");
 		value = lua_tolstring(L, -1, &len);
 		lua_pop(L, 1);
-	} else {
-		value = "Can't handle this type";
+		break;
+	case LUA_TTABLE:
+	case LUA_TTHREAD:
+	default:
+		// FIXME: Call __tostring on table maybe?
+		value = "???";
+		len = 3;
+		break;
 	}
 
 	if (value)
