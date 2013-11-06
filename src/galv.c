@@ -498,19 +498,16 @@ static int
 galv_lua_outraw(lua_State *L) {
 	struct blam *blam;
 	int i, n;
-	size_t len;
-	const char *str;
 
 	n = lua_gettop(L);
 	/* FIXME: I should use the registry for this */
 	lua_getglobal(L, "blam"); // FIXME: check
 	blam = lua_touserdata(L, -1);
+	lua_pop(L, 1);
 
-	for (i = 0 ; i < n ; i ++) {
-		str = lua_tolstring(L, n, &len);
-		blam->write(blam, str, len);
+	for (i = 1 ; i <= n ; i ++) {
+		write_object(blam, L, i);
 	}
-
 	// Make sure strings are valid
 	blam->flush(blam);
 
