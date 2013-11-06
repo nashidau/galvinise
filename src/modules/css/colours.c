@@ -79,12 +79,14 @@ colours_new_colour(lua_State *L) {
 
 static int
 colours_tostring(lua_State *L) {
+	char buf[100];
+	int len;
 	struct colour *c = luaL_checkudata(L, 1, MODULE_NAME);
 	if (!c) {
 		return luaL_error(L, "Not a colour");
 	}
-	// FIXME: A is 0->1
-	lua_pushfstring(L, "rgba(%d,%d,%d,%d)",c->r,c->g,c->b,c->a);
+	len = snprintf(buf,sizeof(buf),"rgba(%d,%d,%d,%0.2f)",c->r,c->g,c->b,c->a/255.0);
+	lua_pushlstring(L, buf, len);
 	return 1;
 }
 
