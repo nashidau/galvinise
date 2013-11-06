@@ -109,6 +109,7 @@ colours_average(lua_State *L) {
 
 	val = (c->r + c->g + c->b) / 3;
 	nc->r = nc->g = nc->b = val;
+	nc->a = c->a;
 
 	return 1;
 }
@@ -135,6 +136,7 @@ colours_lightness(lua_State *L) {
 	b = c->b;
 	val = (MAX(r,MAX(g,b)) + MIN(r,MIN(g,b))) / 2;
 	nc->r = nc->g = nc->b = val;
+	nc->a = c->a;
 
 	return 1;
 }
@@ -157,6 +159,7 @@ colours_luminosity(lua_State *L) {
 
 	val = 0.21 * c->r + 0.72 * c->g + 0.7 * c->b;
 	nc->r = nc->g = nc->b = val;
+	nc->a = c->a;
 
 	return 1;
 }
