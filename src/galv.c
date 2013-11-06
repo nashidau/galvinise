@@ -311,13 +311,16 @@ extract_symbol(const char *start, bool *iscall) {
 	const char *p;
 	int depth = 0;
 
+	if (iscall) *iscall = false;
+
 	p = start;
-	while (isalnum(*p) || *p == '.' || *p == ':' || *p == '_') {
+	while (isalnum(*p) || *p == ']' || *p == '[' ||
+			*p == '.' || *p == ':' || *p == '_') {
+		if (*p == '[' && iscall) *iscall = true;
 		p ++;
 	}
 
 	if (*p != '(') {
-		if (iscall) *iscall = false;
 		return p - start;
 	}
 
