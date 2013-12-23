@@ -20,4 +20,5 @@ Todo for Galvinise
 	- Filename parsing
 	- Tree walking
 	- Test end of file when slurping comments
-
+ - Data URI for images built into CSS support
+ - CSS sprites built in
