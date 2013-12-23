@@ -17,6 +17,8 @@
 #include <lauxlib.h>
 
 #include "galv.h"
+// FIXME: This should be in modules.h or similar
+#include "modules/css/colours.h"
 #include "diskslurp.h"
 
 int DEBUG_LEVEL = 1;
@@ -34,6 +36,7 @@ static struct predef_symbols {
 	{ "GALVINISE", "Galvinise 0.1" },
 	{ "GALVINISE_VERSION", "0.1" },
 	{ "PANTS", "On" },
+	{ "$", "$" },
 };
 #define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
 
@@ -61,6 +64,7 @@ static int eval_lua(struct blam *blam, const char *sym, int len);
 static int init_symbols(void);
 static int walk_symbol(const char *sym, int len);
 static const char *slurp_comment(const char *p, const char *end);
+static int write_object(struct blam *blam, lua_State *L, int index);
 
 void galv_stack_dump(lua_State *lua,const char *msg,...);
 
@@ -72,6 +76,8 @@ main(int argc, char **argv) {
 	L = lua_open();
 	luaL_openlibs(L);
 	init_symbols();
+
+	colours_init(L);
 
 	/* Get options */
 	/* FIXME: Use getopt? */
@@ -237,7 +243,14 @@ process_file(struct blam *blam, struct inputfile *inputfile) {
 			p += 1;
 			p += nbytes;
 		} else {
+			// Handle '$'
 			p ++;
+			if (*p == '$') {
+				// $$ outputs $
+				blam->write(blam, "$", 1);
+				p ++;
+				continue;
+			}
 			nbytes = extract_symbol(p, &iscall);
 			if (nbytes == 0) {
 				// Not a symbol
@@ -298,13 +311,16 @@ extract_symbol(const char *start, bool *iscall) {
 	const char *p;
 	int depth = 0;
 
+	if (iscall) *iscall = false;
+
 	p = start;
-	while (isalnum(*p) || *p == '.' || *p == '_') {
+	while (isalnum(*p) || *p == ']' || *p == '[' ||
+			*p == '.' || *p == ':' || *p == '_') {
+		if (*p == '[' && iscall) *iscall = true;
 		p ++;
 	}
 
 	if (*p != '(') {
-		if (iscall) *iscall = false;
 		return p - start;
 	}
 
@@ -325,7 +341,6 @@ extract_symbol(const char *start, bool *iscall) {
  */
 static int
 eval_symbol(struct blam *blam, const char *sym, int len) {
-	const char *value = NULL;
 	char buf[len + 1];
 
 	memcpy(buf, sym, len);
@@ -336,16 +351,16 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 		return -1;
 	}
 
-	if (lua_isstring(L, -1)) {
-		value = lua_tostring(L, -1);
-	} else {
-		// FIXME: This error bites
-		printf("Could not find %.*s\n", len, sym);
+	if (lua_isnil(L, -1)) {
+		printf("Could not find '%.*s'\n", len, sym);
+		lua_pop(L, 1);
+		return -1;
 	}
+
+	write_object(blam, L, -1);
+
 	lua_pop(L, 1);
 
-	if (value)
-		blam->write(blam, value, strlen(value));
 	return 0;
 }
 
@@ -361,14 +376,55 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 
 	luaL_loadbuffer(L, buf, len + 7, buf);
 	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
-	if (lua_isstring(L, -1)) {
-		blam->write_string(blam, lua_tostring(L, -1));
-	} else {
-		printf("Didn't get a string back from inline\n");
-	}
+	write_object(blam, L, -1);
 	lua_pop(L, 1);
 
 	return 0;
+}
+
+static int
+write_object(struct blam *blam, lua_State *L, int index) {
+	const char *value = NULL;
+	size_t len;
+
+	switch (lua_type(L, index)) {
+	case LUA_TNIL:
+		value = "nil"; len = 3;
+		break;
+	case LUA_TNUMBER:
+	case LUA_TSTRING:
+		value = lua_tolstring(L, index, &len);
+		break;
+	case LUA_TBOOLEAN:
+		if (lua_toboolean(L, index)) {
+			value = "true";
+			len = 4;
+		} else {
+			value = "false";
+			len = 5;
+		}
+		break;
+	case LUA_TLIGHTUSERDATA:
+		value = "user data";
+		len = 9;
+		break;
+	case LUA_TUSERDATA:
+		luaL_callmeta(L, index, "__tostring");
+		value = lua_tolstring(L, -1, &len);
+		lua_pop(L, 1);
+		break;
+	case LUA_TTABLE:
+	case LUA_TTHREAD:
+	default:
+		// FIXME: Call __tostring on table maybe?
+		value = "???";
+		len = 3;
+		break;
+	}
+
+	if (value)
+		blam->write(blam, value, len);
+	return !!value;
 }
 
 /**
@@ -442,27 +498,23 @@ static int
 galv_lua_outraw(lua_State *L) {
 	struct blam *blam;
 	int i, n;
-	size_t len;
-	const char *str;
 
 	n = lua_gettop(L);
 	/* FIXME: I should use the registry for this */
 	lua_getglobal(L, "blam"); // FIXME: check
 	blam = lua_touserdata(L, -1);
+	lua_pop(L, 1);
 
-	for (i = 0 ; i < n ; i ++) {
-		str = lua_tolstring(L, n, &len);
-		blam->write(blam, str, len);
+	for (i = 1 ; i <= n ; i ++) {
+		write_object(blam, L, i);
 	}
-
 	// Make sure strings are valid
 	blam->flush(blam);
 
 	return 0;
 }
 
-
-int
+static int
 galv_table_count(lua_State *lua, int table){
         int count = 0;
         if (!lua_istable(lua, table))
@@ -474,9 +526,6 @@ galv_table_count(lua_State *lua, int table){
         }
         return count;
 }
-
-
-
 
 void
 galv_stack_dump(lua_State *lua,const char *msg,...){

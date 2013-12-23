@@ -1,5 +1,8 @@
 0xx are specific test items
-1xx are testing CSS files, real usage
+
+1xx is the colour module
+
+
 2xx are for bug reports
 
 

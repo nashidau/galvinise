@@ -13,7 +13,8 @@ SRCS= 			\
 	galv.o		\
 	diskslurp.o	\
 	blam_direct.o	\
-	blam_writev.o
+	blam_writev.o	\
+	modules/css/colours.o
 
 galv: ${SRCS}
 	${CC} -std=c99 ${LDFLAGS} -o galv ${SRCS}
@@ -22,4 +23,4 @@ install: galv
 	cp galv ${PREFIX}/bin
 
 clean:
-	rm -f *.o galv
+	rm -f *.o **/*.o galv

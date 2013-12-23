@@ -1,0 +1,6 @@
+Check $ escapeing:
+	Naked Dollar (produces dollar)	$
+	Double Dollar (produces dollar) $
+	Double Dollar 3000 dollars $3000
+
+

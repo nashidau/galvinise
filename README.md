@@ -24,7 +24,7 @@ function invocation goes until it reaches the matching closing ).
 
 {{include "file"}} includes a file.
 
-A $ followed by whitespace produces a $.
+A $ followed by whitespace or another $ produces a $.
 
 {{ O("String format %d", 7) }} Outputs the formatted string.
 
@@ -42,5 +42,4 @@ Predefined Values
 Future Work
 ===========
 
-   * hould foo.gvz.html produce foo.html?  Yes probably.
-   * How to print a $ value which is not code.
+   * Should foo.gvz.html produce foo.html?  Yes probably.
