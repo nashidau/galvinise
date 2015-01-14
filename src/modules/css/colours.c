@@ -73,7 +73,7 @@ colours_new_colour(lua_State *L) {
 	n = lua_gettop(L);
 	if (n < 1) {
 		lua_pushnil(L);
-		lua_pushstring("Must pass an argument");
+		lua_pushstring(L, "Must pass an argument");
 		return 0;
 	}
 

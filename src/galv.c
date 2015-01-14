@@ -17,17 +17,12 @@
 #include <lauxlib.h>
 
 #include "galv.h"
+#include "galvinise.h"
 // FIXME: This should be in modules.h or similar
 #include "modules/css/colours.h"
 #include "diskslurp.h"
 
 int DEBUG_LEVEL = 1;
-
-struct inputfile {
-	struct inputfile *next;
-	const char *name;
-	const char *outfile;
-};
 
 static struct predef_symbols {
 	const char *symbol;
@@ -43,19 +38,7 @@ static struct predef_symbols {
 static int galv_lua_include(lua_State *L);
 static int galv_lua_outraw(lua_State *L);
 
-static const luaL_Reg methods[] = {
-	{ "include",	galv_lua_include },
-	{ "Oraw",	galv_lua_outraw },
-	{ NULL, NULL },
-};
-
-lua_State *L = NULL;
-
-// Given a filename, generate a name for the output.
-static char *get_name(void *ctx, const char *name);
-
-static int process(struct inputfile *);
-static int process_file(struct blam *, struct inputfile *);
+static int process_file(struct blam *, struct galv_file *);
 
 static int extract_symbol(const char *start, bool *iscall);
 static int eval_symbol(struct blam *blam, const char *sym, int len);
@@ -68,67 +51,23 @@ static int write_object(struct blam *blam, lua_State *L, int index);
 
 void galv_stack_dump(lua_State *lua,const char *msg,...);
 
-int
-main(int argc, char **argv) {
-	int i;
-	struct inputfile *cur = NULL, *first = NULL;
 
+static const luaL_Reg methods[] = {
+	{ "include",	galv_lua_include },
+	{ "Oraw",	galv_lua_outraw },
+	{ NULL, NULL },
+};
+
+lua_State *L = NULL;
+
+int galvinise_init(int *argc, char **argv) {
 	L = lua_open();
 	luaL_openlibs(L);
 	init_symbols();
 
 	colours_init(L);
 
-	/* Get options */
-	/* FIXME: Use getopt? */
-	for (i = 1 ; i < argc ; i ++) {
-		if (*argv[i] == '-') {
-			printf("Found option: %s\n", argv[i] + 1);
-		} else {
-			if (cur == NULL) { // First file
-				cur = talloc(NULL, struct inputfile);
-				first = cur;
-			} else {
-				cur->next = talloc(cur, struct inputfile);
-				cur = cur->next;
-			}
-			cur->next = NULL;
-			cur->name = argv[i];
-			cur->outfile = get_name(cur, cur->name);
-		}
-	}
-
-	if (cur == NULL) {
-		fprintf(stderr, "Galvinise: No input files\n");
-		exit(1);
-	}
-
-	for (cur = first ; cur ; cur = cur->next) {
-		printf("Galvinising: %s -> %s\n", cur->name, cur->outfile);
-		process(cur);
-	}
-
-	exit(0);
-}
-
-static char *
-get_name(void *ctx, const char *name) {
-	char *outfile, *p, *q;
-
-	if ((p = strstr(name, ".gvz"))) {
-		outfile = talloc_size(ctx, strlen(name) - 3);
-		strncpy(outfile, name, p - name);
-		q = outfile + (p - name);
-		p += 4; /* sizeof(.gvz) */
-		if (*p == 0)
-			*q = 0;
-		else {
-			strcpy(q, p);
-		}
-	} else {
-		outfile = talloc_asprintf(ctx, "%s.out", name);
-	}
-	return outfile;
+	return 0;
 }
 
 /**
@@ -151,8 +90,8 @@ init_symbols(void) {
 	return 0;
 }
 
-static int
-process(struct inputfile *inputfile) {
+int
+galvinise(struct galv_file *inputfile) {
 	struct blam *blam;
 
 	blam = blam_init(inputfile, inputfile->outfile);
@@ -170,8 +109,8 @@ process(struct inputfile *inputfile) {
 }
 
 
-static int
-process_file(struct blam *blam, struct inputfile *inputfile) {
+int
+process_file(struct blam *blam, struct galv_file *inputfile) {
 	static bool useread = false;
 	int fd;
 	const char *inaddr, *end;
@@ -472,7 +411,7 @@ static int
 galv_lua_include(lua_State *L) {
 	struct blam *blam;
 	const char *name;
-	struct inputfile include;
+	struct galv_file include;
 
 	name = lua_tostring(L, lua_gettop(L));
 
