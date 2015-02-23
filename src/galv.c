@@ -38,7 +38,7 @@ static struct predef_symbols {
 static int galv_lua_include(lua_State *L);
 static int galv_lua_outraw(lua_State *L);
 
-static int process_file(struct blam *, struct galv_file *);
+static int process_file(struct blam *, const char *infilename);
 
 static int extract_symbol(const char *start, bool *iscall);
 static int eval_symbol(struct blam *blam, const char *sym, int len);
@@ -71,6 +71,16 @@ int galvinise_init(int *argc, char **argv) {
 }
 
 /**
+ * Get the Lua environment galvinise uses.
+ *
+ * You can pass your own values to the template from here.
+ * Any symbol starting with galv or blam is reserved.
+ */
+lua_State *galvinise_environment_get(void) {
+	return L;
+}
+
+/**
  * Initialise the predefined symbols.  At the moment we have the galvanise ones
  * only.
  */
@@ -99,7 +109,7 @@ galvinise(struct galv_file *inputfile) {
 	lua_pushlightuserdata(L, blam);
 	lua_setglobal(L, "blam");
 
-	process_file(blam, inputfile);
+	process_file(blam, inputfile->name);
 
 	lua_pushnil(L);
 	lua_setglobal(L, "blam");
@@ -110,7 +120,25 @@ galvinise(struct galv_file *inputfile) {
 
 
 int
-process_file(struct blam *blam, struct galv_file *inputfile) {
+galvinise_onion(const char *input, struct onion_response_t *res) {
+	struct blam *blam;
+	blam = blam_onion_init(NULL, res);
+
+	// FIXME: Should be in the registry
+	lua_pushlightuserdata(L, blam);
+	lua_setglobal(L, "blam");
+
+	process_file(blam, input);
+
+	lua_pushnil(L);
+	lua_setglobal(L, "blam");
+	talloc_free(blam);
+
+	return 0;
+}
+
+int
+process_file(struct blam *blam, const char *infilename) {
 	static bool useread = false;
 	int fd;
 	const char *inaddr, *end;
@@ -120,9 +148,9 @@ process_file(struct blam *blam, struct galv_file *inputfile) {
 	bool iscall;
 	struct stat st;
 
-	fd = open(inputfile->name, O_RDONLY);
+	fd = open(infilename, O_RDONLY);
 	if (fd == -1) {
-		fprintf(stderr, "Unable to open '%s': %s\n", inputfile->name,
+		fprintf(stderr, "Unable to open '%s': %s\n", infilename,
 				strerror(errno));
 		return -1;
 	}
@@ -135,7 +163,7 @@ process_file(struct blam *blam, struct galv_file *inputfile) {
 		if (inaddr == MAP_FAILED) {
 			if (useread) {
 				printf("Unable to mmap %s: %s\n",
-						inputfile->name,
+						infilename,
 						strerror(errno));
 				printf("Falling back to read from here");
 				useread = true;
@@ -421,7 +449,7 @@ galv_lua_include(lua_State *L) {
 	lua_getglobal(L, "blam"); // FIXME: check
 	blam = lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	if (process_file(blam, &include)) {
+	if (process_file(blam, include.name)) {
 		exit(1);
 	}
 

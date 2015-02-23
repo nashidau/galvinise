@@ -23,7 +23,7 @@ struct blam;
 // Given a filename, generate a name for the output.
 static char *get_name(void *ctx, const char *name);
 
-static int process_file(struct blam *, struct galv_file *);
+int process_file(struct blam *, struct galv_file *);
 
 int
 main(int argc, char **argv) {
