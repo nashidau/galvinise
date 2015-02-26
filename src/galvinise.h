@@ -1,6 +1,8 @@
 #ifndef GALVINISE_H
 #define GALVINISE_H 1
 
+struct onion_response_t;
+
 struct galv_file {
 	struct galv_file *next;
 	const char *name;
