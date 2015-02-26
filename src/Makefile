@@ -26,10 +26,10 @@ SRCS= 			\
 libgalv.a : ${SRCS}
 	ar rcs libgalv.a ${SRCS}
 
-galv: ${SRCS} main.o libgalv.a
-	${CC} -std=c99 ${LDFLAGS} -o galv ${SRCS} -lgalv
+galv: main.o libgalv.a
+	${CC} ${CFLAGS} -std=c99 ${LDFLAGS} -o galv main.o -lgalv
 
-install: libgalv.a
+install: libgalv.a galv
 	cp galv ${PREFIX}/bin
 	install galvinise.h /usr/local/include
 	install libgalv.a /usr/local/lib
