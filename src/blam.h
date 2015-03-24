@@ -7,6 +7,7 @@ struct blam {
 	int (*write_string)(struct blam *, const char *str);
 	int (*flush)(struct blam *);
 	int (*close)(struct blam *);
+	int (*write_file)(struct blam *, const char *file);
 };
 
 #define blam_init(ctx, file)	blam_direct_init(ctx, file)
