@@ -24,6 +24,9 @@
 
 int DEBUG_LEVEL = 1;
 
+// Lua environment 
+static int gref;
+
 static struct predef_symbols {
 	const char *symbol;
 	const char *value;
@@ -123,6 +126,21 @@ int
 galvinise_onion(const char *input, struct onion_response_t *res) {
 	struct blam *blam;
 	blam = blam_onion_init(NULL, res);
+galv_stack_dump(L, "Onion call");
+	// Should have a value on top of the stack which is an
+	// table, which will be the current environment
+	if (!lua_istable(L, -1)) {
+		lua_newtable(L);
+	}
+galv_stack_dump(L, "Onion call 2");
+
+	lua_getglobal(L, "_G");
+galv_stack_dump(L, "Onion call 3");
+	lua_setfield(L, -2, "__index");
+galv_stack_dump(L, "Onion call 4");
+	lua_pop(L, 1); // Don't need _G anymore.
+	gref = luaL_ref(L, LUA_REGISTRYINDEX);
+	printf("Gref is %d\n", gref);
 
 	// FIXME: Should be in the registry
 	lua_pushlightuserdata(L, blam);
@@ -314,12 +332,12 @@ eval_symbol(struct blam *blam, const char *sym, int len) {
 	buf[len] = 0;
 
 	if (walk_symbol(sym, len) != 0) {
-		printf("Error traversing %.*s\n", len, sym);
+		printf("eval_symbol: Error traversing %.*s\n", len, sym);
 		return -1;
 	}
 
 	if (lua_isnil(L, -1)) {
-		printf("Could not find '%.*s'\n", len, sym);
+		printf("eval_symbol: Could not find '%.*s'\n", len, sym);
 		lua_pop(L, 1);
 		return -1;
 	}
@@ -402,13 +420,18 @@ static int
 walk_symbol(const char *sym, int len) {
 	const char *p;
 	const char *end = sym + len;
-	int ind = LUA_GLOBALSINDEX;
+	int ind;
+
+	// FIXME: This is now totally broken: I don't pop this
+	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
+	ind = lua_gettop(L);
 
 	do {
 		p = memchr(sym, '.', end - sym);
 		if (p == NULL) p = end;
 		lua_pushlstring(L, sym, p - sym);
 		lua_gettable(L, ind);
+galv_stack_dump(L, "Got sym '%.*s'", p - sym, sym);
 		ind = lua_gettop(L);
 		sym = p + 1;
 	} while (p < end);
@@ -420,6 +443,10 @@ walk_symbol(const char *sym, int len) {
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
 	luaL_loadbuffer(L, block, len, "some block you know");
+	// FIXME: Horrible performance here.
+	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
+	lua_setfenv(L, -2);
+
 	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
 	if (lua_isstring(L, -1)) {
 		blam->write_string(blam, lua_tostring(L, -1));
@@ -559,9 +586,13 @@ galv_stack_dump(lua_State *lua,const char *msg,...){
 				printf("[%p]\n",lua_topointer(lua,i));
 				lua_getfield(lua, i, "name");
 				if (lua_isstring(lua,-1)){
-					printf("\t\tQuest Name is %s\n",lua_tostring(lua,-1));
+					printf("\t\tName is %s\n",lua_tostring(lua,-1));
 				}
 				lua_pop(lua,1);
+				if (lua_getmetatable(L, i)) {
+					printf("\t\tHas metatable\n");
+					lua_pop(L, 1);
+				}
 				break;
 			case LUA_TTHREAD:
 				st = lua_objlen(lua,i);
