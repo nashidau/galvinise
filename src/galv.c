@@ -107,6 +107,15 @@ int
 galvinise(struct galv_file *inputfile) {
 	struct blam *blam;
 
+	if (lua_gettop(L) < 1 || !lua_istable(L, -1)) {
+		lua_newtable(L);
+	}
+	lua_getglobal(L, "_G");
+	lua_setfield(L, -2, "__index");
+	lua_pop(L, 1); // Don't need _G anymore.
+
+	gref = luaL_ref(L, LUA_REGISTRYINDEX);
+
 	blam = blam_init(inputfile, inputfile->outfile);
 	// FIXME: Should be in the registry
 	lua_pushlightuserdata(L, blam);
@@ -129,7 +138,7 @@ galvinise_onion(const char *input, struct onion_response_t *res) {
 galv_stack_dump(L, "Onion call");
 	// Should have a value on top of the stack which is an
 	// table, which will be the current environment
-	if (!lua_istable(L, -1)) {
+	if (lua_gettop(L) < 1 || !lua_istable(L, -1)) {
 		lua_newtable(L);
 	}
 galv_stack_dump(L, "Onion call 2");
@@ -422,7 +431,6 @@ walk_symbol(const char *sym, int len) {
 	const char *end = sym + len;
 	int ind;
 
-	// FIXME: This is now totally broken: I don't pop this
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	ind = lua_gettop(L);
 
@@ -431,10 +439,12 @@ walk_symbol(const char *sym, int len) {
 		if (p == NULL) p = end;
 		lua_pushlstring(L, sym, p - sym);
 		lua_gettable(L, ind);
-galv_stack_dump(L, "Got sym '%.*s'", p - sym, sym);
 		ind = lua_gettop(L);
 		sym = p + 1;
 	} while (p < end);
+
+	// Remove the environtable we just grabbed.
+	lua_remove(L, -2);
 
 	return 0;
 }

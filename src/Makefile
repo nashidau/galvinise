@@ -27,7 +27,7 @@ libgalv.a : ${SRCS}
 	ar rcs libgalv.a ${SRCS}
 
 galv: main.o libgalv.a
-	${CC} ${CFLAGS} -std=c99 ${LDFLAGS} -o galv main.o -lgalv
+	${CC} ${CFLAGS} -std=c99 ${LDFLAGS} -o galv main.o -L. -lgalv
 
 install: libgalv.a galv
 	cp galv ${PREFIX}/bin
