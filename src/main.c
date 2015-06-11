@@ -29,8 +29,9 @@ int
 main(int argc, char **argv) {
 	int i;
 	struct galv_file *cur = NULL, *first = NULL;
+	lua_State *L;
 	
-	galvinise_init(&argc, argv);
+	L = galvinise_init(&argc, argv);
 
 	/* Get options */
 	/* FIXME: Use getopt? */
@@ -57,6 +58,7 @@ main(int argc, char **argv) {
 	}
 
 	for (cur = first ; cur ; cur = cur->next) {
+		lua_newtable(L);
 		printf("Galvinising: %s -> %s\n", cur->name, cur->outfile);
 		galvinise(cur);
 	}

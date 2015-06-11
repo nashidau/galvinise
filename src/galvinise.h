@@ -9,7 +9,7 @@ struct galv_file {
 	const char *outfile;
 };
 
-int galvinise_init(int *argc, char **argv);
+lua_State *galvinise_init(int *argc, char **argv);
 lua_State *galvinise_environment_get(void);
 
 int galvinise(struct galv_file *file);

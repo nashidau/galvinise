@@ -63,14 +63,15 @@ static const luaL_Reg methods[] = {
 
 lua_State *L = NULL;
 
-int galvinise_init(int *argc, char **argv) {
+lua_State *galvinise_init(int *argc, char **argv) {
 	L = lua_open();
 	luaL_openlibs(L);
 	init_symbols();
 
-	colours_init(L);
+	// FIXME: Colours init leaves something on the stack: Fix it.
+	//colours_init(L);
 
-	return 0;
+	return L;
 }
 
 /**
@@ -90,6 +91,7 @@ lua_State *galvinise_environment_get(void) {
 static int
 init_symbols(void) {
 	int i;
+
 	assert(L);
 	if (!L) return -1;
 
@@ -100,6 +102,8 @@ init_symbols(void) {
 
 	lua_getglobal(L, "_G");
 	luaL_openlib(L, NULL, methods, 0);
+
+	lua_pop(L, 1);
 	return 0;
 }
 
@@ -134,24 +138,22 @@ galvinise(struct galv_file *inputfile) {
 int
 galvinise_onion(const char *input, struct onion_response_t *res) {
 	struct blam *blam;
-	blam = blam_onion_init(NULL, res);
-galv_stack_dump(L, "Onion call");
+
 	// Should have a value on top of the stack which is an
 	// table, which will be the current environment
 	if (lua_gettop(L) < 1 || !lua_istable(L, -1)) {
 		lua_newtable(L);
 	}
-galv_stack_dump(L, "Onion call 2");
 
+	lua_newtable(L);
 	lua_getglobal(L, "_G");
-galv_stack_dump(L, "Onion call 3");
 	lua_setfield(L, -2, "__index");
-galv_stack_dump(L, "Onion call 4");
-	lua_pop(L, 1); // Don't need _G anymore.
+	lua_setmetatable(L, -2);
+
 	gref = luaL_ref(L, LUA_REGISTRYINDEX);
-	printf("Gref is %d\n", gref);
 
 	// FIXME: Should be in the registry
+	blam = blam_onion_init(NULL, res);
 	lua_pushlightuserdata(L, blam);
 	lua_setglobal(L, "blam");
 
@@ -160,6 +162,8 @@ galv_stack_dump(L, "Onion call 4");
 	lua_pushnil(L);
 	lua_setglobal(L, "blam");
 	talloc_free(blam);
+
+	luaL_unref(L, LUA_REGISTRYINDEX, gref);
 
 	return 0;
 }
@@ -202,8 +206,10 @@ process_file(struct blam *blam, const char *infilename) {
 
 	close(fd);
 
-	if (inaddr == NULL || inaddr == MAP_FAILED)
+	if (inaddr == NULL || inaddr == MAP_FAILED) {
+		perror("mmap");
 		return -1;
+	}
 
 	p = inaddr;
 	end = p + st.st_size;
@@ -308,6 +314,12 @@ extract_symbol(const char *start, bool *iscall) {
 	if (iscall) *iscall = false;
 
 	p = start;
+/*	if (isdigit(*p)) {
+		// We don't allow symbols to start with digits - probably
+		// a price,  return..
+		return 0;
+	}
+*/
 	while (isalnum(*p) || *p == ']' || *p == '[' ||
 			*p == '.' || *p == ':' || *p == '_') {
 		if (*p == '[' && iscall) *iscall = true;
@@ -453,9 +465,10 @@ walk_symbol(const char *sym, int len) {
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
 	luaL_loadbuffer(L, block, len, "some block you know");
-	// FIXME: Horrible performance here.
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
-	lua_setfenv(L, -2);
+	if (lua_setfenv(L, -2) != 1) {
+		printf("Setenv failed\n");
+	}
 
 	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
 	if (lua_isstring(L, -1)) {
@@ -487,6 +500,7 @@ galv_lua_include(lua_State *L) {
 	blam = lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	if (process_file(blam, include.name)) {
+		fprintf(stderr, "Process file failed\n");
 		exit(1);
 	}
 
@@ -543,14 +557,13 @@ galv_stack_dump(lua_State *lua,const char *msg,...){
 		va_start(ap, msg);
 		vprintf(msg, ap);
 		va_end(ap);
-		printf("\n");
 	}
 	n = lua_gettop(lua);
 	if (n == 0){
-		printf("\tEmpty stack\n");
+		printf("\n\tEmpty stack\n");
 		return;
 	} else if (n < 0){
-		printf("\tMassive stack corruption: Top is %d\n",n);
+		printf("\n\tMassive stack corruption: Top is %d\n",n);
 		assert(n >= 0);
 		return;
 	}

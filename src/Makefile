@@ -14,7 +14,6 @@ endif
 CFLAGS+=`pkg-config --cflags ${PKGS}`
 LDFLAGS+=`pkg-config --libs ${PKGS}` -lonion
 
-
 SRCS= 			\
 	galv.o		\
 	diskslurp.o	\
