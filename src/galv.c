@@ -114,10 +114,13 @@ galvinise(struct galv_file *inputfile) {
 	if (lua_gettop(L) < 1 || !lua_istable(L, -1)) {
 		lua_newtable(L);
 	}
+
+	// Set the metatable __index field to be the _G table
+	// FIXME: I could reuse this table for speed/memory
+	lua_newtable(L);
 	lua_getglobal(L, "_G");
 	lua_setfield(L, -2, "__index");
-	lua_pop(L, 1); // Don't need _G anymore.
-
+	lua_setmetatable(L,  -2);
 	gref = luaL_ref(L, LUA_REGISTRYINDEX);
 
 	blam = blam_init(inputfile, inputfile->outfile);
@@ -133,7 +136,6 @@ galvinise(struct galv_file *inputfile) {
 	blam->close(blam);
 	return 0;
 }
-
 
 int
 galvinise_onion(const char *input, struct onion_response_t *res) {
@@ -380,7 +382,14 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 	strncpy(buf + 7, sym, len);
 	buf[7 + len] = 0;
 
+	// FIXME: write a wrapper around loadbuffer/setfenv
 	luaL_loadbuffer(L, buf, len + 7, buf);
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
+	if (lua_setfenv(L, -2) != 1) {
+		// FIXME: Shoudl barf.
+		printf("Setenv failed\n");
+	}
 	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
 	write_object(blam, L, -1);
 	lua_pop(L, 1);
@@ -467,6 +476,7 @@ eval_lua(struct blam *blam, const char *block, int len) {
 	luaL_loadbuffer(L, block, len, "some block you know");
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	if (lua_setfenv(L, -2) != 1) {
+		// FIXME: Shoudl barf.
 		printf("Setenv failed\n");
 	}
 
