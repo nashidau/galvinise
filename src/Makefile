@@ -22,11 +22,12 @@ SRCS= 			\
 	blam_onion.o	\
 	modules/css/colours.o
 
-libgalv.a : ${SRCS}
-	ar rcs libgalv.a ${SRCS}
-
 galv: main.o libgalv.a
 	${CC} ${CFLAGS} -std=c99 ${LDFLAGS} -o galv main.o -L. -lgalv
+
+libgalv.a : ${SRCS}
+	rm -f libgalv.a
+	ar rcs libgalv.a ${SRCS}
 
 install: libgalv.a galv
 	cp galv ${PREFIX}/bin
