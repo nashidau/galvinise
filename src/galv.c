@@ -316,12 +316,12 @@ extract_symbol(const char *start, bool *iscall) {
 	if (iscall) *iscall = false;
 
 	p = start;
-/*	if (isdigit(*p)) {
+	if (isdigit(*p)) {
 		// We don't allow symbols to start with digits - probably
 		// a price,  return..
 		return 0;
 	}
-*/
+
 	while (isalnum(*p) || *p == ']' || *p == '[' ||
 			*p == '.' || *p == ':' || *p == '_') {
 		if (*p == '[' && iscall) *iscall = true;
