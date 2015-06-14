@@ -23,7 +23,7 @@ SRCS= 			\
 	modules/css/colours.o
 
 galv: main.o libgalv.a
-	${CC} ${CFLAGS} -std=c99 ${LDFLAGS} -o galv main.o -L. -lgalv
+	${CC} ${CFLAGS} -std=c99 -o galv main.o -L. -lgalv ${LDFLAGS}
 
 libgalv.a : ${SRCS}
 	rm -f libgalv.a
