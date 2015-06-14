@@ -68,8 +68,7 @@ lua_State *galvinise_init(int *argc, char **argv) {
 	luaL_openlibs(L);
 	init_symbols();
 
-	// FIXME: Colours init leaves something on the stack: Fix it.
-	//colours_init(L);
+	colours_init(L);
 
 	return L;
 }

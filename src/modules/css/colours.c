@@ -45,6 +45,7 @@ colours_init(lua_State *L) {
 	lua_setfield(L, -2, "__index");
 
 	luaL_register(L, NULL, colour_methods);
+	lua_pop(L, 1);
 
 	return 0;
 }
