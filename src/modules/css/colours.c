@@ -69,14 +69,15 @@ colours_new_colour(lua_State *L) {
 	struct colour *c;
 	int n;
 
-	c = colour_alloc(L);
 
 	n = lua_gettop(L);
 	if (n < 1) {
 		lua_pushnil(L);
 		lua_pushstring(L, "Must pass an argument");
-		return 0;
+		return 2;
 	}
+
+	c = colour_alloc(L);
 
 	switch (n) {
 	case 1:
@@ -92,6 +93,7 @@ colours_new_colour(lua_State *L) {
 		c->g = lua_tointeger(L, 2);
 		c->b = lua_tointeger(L, 3);
 		c->a = 1;
+		break;
 	default:
 		// 4 or more
 		c->r = lua_tointeger(L, 1);
