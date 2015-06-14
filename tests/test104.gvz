@@ -1,0 +1,5 @@
+Call rgba() => {{
+	c,err = rgba();
+	Oraw(c); Oraw(",");
+	Oraw(err)
+}}
