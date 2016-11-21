@@ -65,6 +65,7 @@ lua_State *L = NULL;
 
 lua_State *galvinise_init(int *argc, char **argv) {
 	L = lua_open();
+	assert(L);
 	luaL_openlibs(L);
 	init_symbols();
 
