@@ -42,6 +42,7 @@ static int galv_lua_include(lua_State *L);
 static int galv_lua_outraw(lua_State *L);
 
 static int process_file(struct blam *, const char *infilename);
+static int process_internal(const char *in, int len, struct blam *out);
 
 static int extract_symbol(const char *start, bool *iscall);
 static int eval_symbol(struct blam *blam, const char *sym, int len);
@@ -172,13 +173,9 @@ galvinise_onion(const char *input, struct onion_response_t *res) {
 
 int
 process_file(struct blam *blam, const char *infilename) {
+	const char *inaddr;
 	static bool useread = false;
 	int fd;
-	const char *inaddr, *end;
-	const char *p;
-	const char *test;
-	int nbytes;
-	bool iscall;
 	struct stat st;
 
 	fd = open(infilename, O_RDONLY);
@@ -213,8 +210,26 @@ process_file(struct blam *blam, const char *infilename) {
 		return -1;
 	}
 
-	p = inaddr;
-	end = p + st.st_size;
+	process_internal(inaddr, st.st_size, blam);
+
+	if (useread)
+		talloc_free((void *)inaddr);
+	else
+		munmap((void *)inaddr, st.st_size);
+
+	return 0;
+}
+
+
+static int process_internal(const char *in, int len, struct blam *blam) {
+	const char *end;
+	const char *p;
+	const char *test;
+	int nbytes;
+	bool iscall;
+
+	p = in;
+	end = p + len;
 
 	while (p < end) {
 		nbytes = strcspn(p, "${");
@@ -265,12 +280,6 @@ process_file(struct blam *blam, const char *infilename) {
 			p += nbytes;
 		}
 	}
-
-	if (useread)
-		talloc_free((void *)inaddr);
-	else
-		munmap((void *)inaddr, st.st_size);
-
 	return 0;
 }
 

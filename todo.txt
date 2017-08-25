@@ -1,5 +1,6 @@
 Todo for Galvinise
 
+ - Galvinise a buffer
  - Escaping of {
  - ${foo.bar} should work - be nice to shell users.
  - Context specific states:

@@ -2,3 +2,5 @@
 *.o
 galv
 *.a
+check
+tags
