@@ -66,12 +66,9 @@ blam_method_write(struct blam *b, const void *data, size_t len) {
 
 	if (!blam) return -1;
 	if (data == NULL) return 0;
+	if (len == 0) return 0;
 
 	buf = talloc(b, struct buf);
-
-	if (len == 0) {
-		len = strlen(data);
-	}
 
 	buf->str = talloc_strndup(b, data, len);
 	buf->len = len;
@@ -89,7 +86,7 @@ blam_method_write(struct blam *b, const void *data, size_t len) {
 
 static int
 blam_method_write_string(struct blam *b, const char *data) {
-	return b->write(b, data, 0);
+	return b->write(b, data, strlen(data));
 }
 
 static int
