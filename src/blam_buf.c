@@ -54,7 +54,7 @@ blam_buf_get(struct blam *b, void *ctx) {
 		memcpy(c, buf->str, buf->len);
 		c += buf->len;
 	}
-	c[blam->len] = 0;
+	out[blam->len] = 0;
 
 	return out;
 }
