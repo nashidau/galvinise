@@ -1,6 +1,8 @@
 #ifndef GALVINISE_H
 #define GALVINISE_H 1
 
+#include <lua.h>
+
 struct onion_response_t;
 
 struct galv_file {
