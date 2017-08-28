@@ -28,7 +28,9 @@ SRCS= 			\
 	modules/css/colours.o
 
 TESTS=			\
-	blam_check.o
+	galv_check.o	\
+	blam_check.o	\
+	check.o
 
 galv: main.o libgalv.a
 	${CC} ${CFLAGS} -std=c99 -o galv main.o -L. -lgalv ${LDFLAGS}

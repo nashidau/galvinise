@@ -47,7 +47,7 @@ START_TEST(test_buf_write_short) {
 	talloc_free(blam);
 } END_TEST
 
-static Suite *blam_buf_suite(void) {
+Suite *blam_suite(void) {
 	Suite *s;
 
 	s = suite_create("Blam");
@@ -68,16 +68,3 @@ static Suite *blam_buf_suite(void) {
 }
 
 
-int main(int argc, char **argv) {
-	Suite *s;
-	SRunner *sr;
-	int nfailed;
-
-	s = blam_buf_suite();
-	sr = srunner_create(s);
-
-	srunner_run_all(sr, CK_NORMAL);
-	nfailed = srunner_ntests_failed(sr);
-	srunner_free(sr);
-	return !!nfailed;
-}
