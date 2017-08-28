@@ -438,7 +438,8 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	if (lua_setfenv(L, -2) != 1) {
 		// FIXME: Shoudl barf.
-		printf("Setenv failed\n");
+		galv_stack_dump(L, "eval_inline failed\n");
+		printf("eval_inline: Setenv failed\n");
 	}
 	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
 	write_object(blam, L, -1);
@@ -523,11 +524,14 @@ walk_symbol(const char *sym, int len) {
 // FIXME: Should get the line number or something.
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
-	luaL_loadbuffer(L, block, len, "some block you know");
+	luaL_loadbuffer(L, block, len, "eval_lua");
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	if (lua_setfenv(L, -2) != 1) {
 		// FIXME: Shoudl barf.
-		printf("Setenv failed\n");
+		galv_stack_dump(L, "eval_inline failed\n");
+		printf("eval lua: Setenv failed\n");
+		printf("[[%.*s]]\n", len, block);
+		exit(1);
 	}
 
 	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
