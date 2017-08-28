@@ -29,6 +29,7 @@ static struct luaL_Reg colour_methods[] = {
 	{ "average",	colours_average },
 	{ "lightness",	colours_lightness },
 	{ "luminosity",	colours_luminosity },
+	{ NULL, NULL },
 };
 
 int
