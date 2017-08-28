@@ -3,7 +3,7 @@ PREFIX=/usr/local
 
 PKGS=			\
 	talloc		\
-	luajit
+	lua5.1
 
 # FIXME: No .pc file for onion
 
