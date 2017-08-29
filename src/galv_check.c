@@ -1,8 +1,9 @@
 #include <check.h>
 #include <ctype.h>
-#include <talloc.h>
-#include <sys/types.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <talloc.h>
+#include <unistd.h>
 #include "lua.h" // fixme, shouldn;t need this
 #include "galvinise.h"
 
@@ -92,12 +93,13 @@ START_TEST(test_galv_golden) {
 
 	job = talloc_zero(NULL, struct galv_file);
 
+	// Should be idempotent even on non-forks
+	chdir("../tests");
+
 	p = golden_files[_i];
-	printf("Testing %s\n", golden_files[_i]);
+	ck_k("running: %s\n", p);
 	q = strstr(p, ".gvz");
-	printf("%d %s %s\n", (int)(q - p), q, p);
 	snprintf(buf, 100, "diff tmp %.*s.expect", (int)(q - p), p);
-	printf("diff: %s\n", buf);
 	job->name = p;
 	job->next = NULL;
 	job->outfile = "tmp";
@@ -155,8 +157,8 @@ Suite *galv_suite(void) {
 			if (!isdigit(*p ++) || !isdigit(*p ++) || !isdigit(*p ++)) continue;
 			if (strcmp(p, ".gvz") != 0) continue;
 			p = dirent->d_name;
-			printf("Found '%s'\n", p);
-			golden_files[i ++] = talloc_asprintf(NULL, "../tests/%s", p);
+			// FIXME: Leak
+			golden_files[i ++] = talloc_strdup(NULL, p);
 		}
 		tcase_add_loop_test(tc, test_galv_golden, 0, i);
 	}
