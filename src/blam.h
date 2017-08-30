@@ -17,6 +17,9 @@ struct blam *blam_writev_init(void *ctx, int nvec, const char *file);
 struct blam *blam_buf_init(void *ctx);
 char *blam_buf_get(struct blam *, void *ctx);
 
+
+#if USE_ONION
 /*FIXME: Ifdef around onion */
 struct onion_response_t;
 struct blam *blam_onion_init(void *ctx, struct onion_response_t *res);
+#endif  // USE_ONION

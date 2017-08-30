@@ -138,6 +138,7 @@ galvinise(struct galv_file *inputfile) {
 	return 0;
 }
 
+#if USE_ONION
 int
 galvinise_onion(const char *input, struct onion_response_t *res) {
 	struct blam *blam;
@@ -170,7 +171,7 @@ galvinise_onion(const char *input, struct onion_response_t *res) {
 
 	return 0;
 }
-
+#endif
 
 char *
 galvinise_buf(const char *buf, size_t len) {

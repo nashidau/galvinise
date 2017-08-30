@@ -41,6 +41,14 @@ Predefined Values
 
 '$PANTS' returns the current pants state.
 
+Using Onion
+===========
+
+If you want to build with onion support use:
+```
+  USE_ONION=y make
+```
+
 Future Work
 ===========
 
