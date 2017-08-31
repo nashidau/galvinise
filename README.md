@@ -3,7 +3,7 @@ Galvinise
 
 Galvinise is a tin-plating, I mean templating library.
 
-
+[![Build Status](https://travis-ci.org/nashidau/galvinise.svg?branch=master)](https://travis-ci.org/nashidau/galvinise)
 
 Using
 =====
