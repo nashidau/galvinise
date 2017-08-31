@@ -94,10 +94,12 @@ START_TEST(test_galv_golden) {
 	job = talloc_zero(NULL, struct galv_file);
 
 	// Should be idempotent even on non-forks
-	chdir("../tests");
+	if (chdir("../tests") != 0) {
+		perror("chdir");
+		ck_abort();
+	}
 
 	p = golden_files[_i];
-	ck_k("running: %s\n", p);
 	q = strstr(p, ".gvz");
 	snprintf(buf, 100, "diff tmp %.*s.expect", (int)(q - p), p);
 	job->name = p;

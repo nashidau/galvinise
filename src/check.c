@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 		srunner_add_suite(sr, test_modules[i]());
 	}
 
-	srunner_run_all(sr, CK_NORMAL);
+	srunner_run_all(sr, CK_VERBOSE);
 	nfailed = srunner_ntests_failed(sr);
 	srunner_free(sr);
 	return !!nfailed;
