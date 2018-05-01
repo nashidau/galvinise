@@ -213,47 +213,6 @@ galvinise_buf(const char *buf, size_t len) {
 	return out;
 }
 
-
-char *
-galvinise_buf(const char *buf, size_t len) {
-	struct blam *blam;
-	char *out;
-
-	// Should have a value on top of the stack which is an
-	// table, which will be the current environment
-	if (lua_gettop(L) < 1 || !lua_istable(L, -1)) {
-		lua_newtable(L);
-	}
-
-	lua_newtable(L);
-	lua_getglobal(L, "_G");
-	lua_setfield(L, -2, "__index");
-	lua_setmetatable(L, -2);
-
-	gref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-	// FIXME: Should be in the registry
-	blam = blam_buf_init(NULL);
-	lua_pushlightuserdata(L, blam);
-	lua_setglobal(L, "blam");
-
-	if (len == 0) {
-		len = strlen(buf);
-	}
-	process_internal(buf, len, blam);
-
-	lua_pushnil(L);
-	lua_setglobal(L, "blam");
-
-	luaL_unref(L, LUA_REGISTRYINDEX, gref);
-
-	out = blam_buf_get(blam, NULL);
-
-	talloc_free(blam);
-
-	return out;
-}
-
 int
 process_file(struct blam *blam, const char *infilename) {
 	const char *inaddr;
