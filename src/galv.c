@@ -379,12 +379,12 @@ extract_symbol(const char *start, bool *iscall) {
 		p ++;
 	}
 
+	// Not a call, lets return
 	if (*p != '(') {
-		if (*iscall == false) {
-			// Back out any trailing special characters
-			while (!isalnum(*p) && *p != '_') p --;
-		}
-		p ++; // Get the last valid cahracter back in
+		p --;
+		// Back out any trailing special characters
+		while (*p == '.') p --;
+		p ++;
 		return p - start;
 	}
 
