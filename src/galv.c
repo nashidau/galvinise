@@ -367,7 +367,7 @@ extract_symbol(const char *start, bool *iscall) {
 	if (iscall) *iscall = false;
 
 	p = start;
-	if (isdigit(*p)) {
+	if (!isalpha(*p)) {
 		// We don't allow symbols to start with digits - probably
 		// a price,  return..
 		return 0;
@@ -380,6 +380,11 @@ extract_symbol(const char *start, bool *iscall) {
 	}
 
 	if (*p != '(') {
+		if (*iscall == false) {
+			// Back out any trailing special characters
+			while (!isalnum(*p) && *p != '_') p --;
+		}
+		p ++; // Get the last valid cahracter back in
 		return p - start;
 	}
 
