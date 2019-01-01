@@ -101,7 +101,7 @@ START_TEST(test_galv_golden) {
 
 	p = golden_files[_i];
 	q = strstr(p, ".gvz");
-	snprintf(buf, 100, "diff tmp %.*s.expect", (int)(q - p), p);
+	snprintf(buf, 100, "diff -u tmp %.*s.expect", (int)(q - p), p);
 	job->name = p;
 	job->next = NULL;
 	job->outfile = "tmp";
