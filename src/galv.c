@@ -85,6 +85,24 @@ lua_State *galvinise_environment_get(void) {
 	return L;
 }
 
+int galvinise_set_value_str(lua_State *L, const char *str) {
+	char *end;
+	char *tmp;
+
+	end = strchr(str, '=');
+	if (!end) {
+		printf("No '=' in arg: %s\n", str);
+		return -1;
+	}
+	lua_pushstring(L, str);
+
+	// FIXME: use generic allocator
+	tmp = strndup(str, end-str -1);
+	lua_setglobal(L, tmp);
+	free(tmp);
+	return 0;
+}
+
 /**
  * Initialise the predefined symbols.  At the moment we have the galvanise ones
  * only.

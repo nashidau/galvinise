@@ -14,6 +14,8 @@ struct galv_file {
 lua_State *galvinise_init(int *argc, char **argv);
 lua_State *galvinise_environment_get(void);
 
+int galvinise_set_value_str(lua_State *L, const char *str);
+
 int galvinise(struct galv_file *file);
 char *galvinise_buf(const char *buf, size_t len);
 int galvinise_onion(const char *input, struct onion_response_t *res);

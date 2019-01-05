@@ -1,5 +1,8 @@
 Todo for Galvinise
 
+ - Add a test for -D
+ 	- Dfoo -> should exit
+	- Dfoo=bar -> can print bar
  - Galvinise a buffer
  - Escaping of {
  - ${foo.bar} should work - be nice to shell users.

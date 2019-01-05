@@ -1,7 +1,10 @@
+#define _GNU_SOURCE 1
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,30 +29,71 @@ static char *get_name(void *ctx, const char *name);
 int process_file(struct blam *, struct galv_file *);
 
 int
+usage(const char *command) {
+	printf("Galvinise: A tin-plating, err, templating system\n");
+	printf("\n");
+	printf("Usage: %s <input files>\n", command);
+	printf(" Writes data to file without the .gvz on the end\n");
+	printf(" If input filename contains .gvz, the .gvz is removed\n");
+	printf(" Otherwise output is written to the same name .out\n");
+	printf("\n");
+	printf(" -d VAR=value Define a value\n");
+	printf(" -l <Lua> Lua code to be executed\n");
+	printf(" -h Help\n");
+
+	exit(0);
+}
+
+int
 main(int argc, char **argv) {
-	int i;
 	struct galv_file *cur = NULL, *first = NULL;
+	static const struct option long_options[] = {
+		{ "define", required_argument, 0, 'd' },
+		{ "lua", required_argument, 0, 'l' },
+		{ "output", required_argument, 0, 'r' },
+		{ "verbose", no_argument, 0, 'v' },
+		{ "help", no_argument, 0, 'h' },
+		{ NULL, 0, 0, 0 },
+	};
+	const char *optstr = "D:d:l:o:h";
+	char opt;
 	lua_State *L;
 	
 	L = galvinise_init(&argc, argv);
 
 	/* Get options */
-	/* FIXME: Use getopt? */
-	for (i = 1 ; i < argc ; i ++) {
-		if (*argv[i] == '-') {
-			printf("Found option: %s\n", argv[i] + 1);
-		} else {
-			if (cur == NULL) { // First file
-				cur = talloc(NULL, struct galv_file);
-				first = cur;
-			} else {
-				cur->next = talloc(cur, struct galv_file);
-				cur = cur->next;
-			}
-			cur->next = NULL;
-			cur->name = argv[i];
-			cur->outfile = get_name(cur, cur->name);
+	while ((opt = getopt_long(argc, argv, optstr, long_options, NULL)) != -1) {
+		switch (opt) {
+		case 'd':
+		case 'D':
+			galvinise_set_value_str(L, optarg);
+			break;
+		case 'l':
+			printf("Lua script\n");
+			break;
+		case 'o':
+			printf("Outfile\n");
+			break;
+		case 'v':
+			printf("Verbose\n");
+			break;
+		case 'h':
+			usage(argv[0]);
+			break;
 		}
+	}
+
+	for ( ; argv[optind] ; optind ++) {
+		if (cur == NULL) { // First file
+			cur = talloc(NULL, struct galv_file);
+			first = cur;
+		} else {
+			cur->next = talloc(cur, struct galv_file);
+			cur = cur->next;
+		}
+		cur->next = NULL;
+		cur->name = argv[optind];
+		cur->outfile = get_name(cur, cur->name);
 	}
 
 	if (cur == NULL) {
