@@ -1,2 +1,15 @@
-echo "No Configure script at the moment"
+#!/bin/bash
+
+# Remove the config.mk file
+rm -f config.mk
+
+touch config.mk
+
+# If onion is installed; build with it
+if [ -f /usr/local/lib/libonion.so -o -f /usr/lib/libonion.so ]; then
+  echo "USE_ONION=y" >> config.mk 
+else
+  echo "USE_ONION=n" >> config.mk
+fi
+
 exit 0

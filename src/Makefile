@@ -13,6 +13,8 @@ ifndef CFLAGS
 CFLAGS=-Wall -O2 -g3
 endif
 
+include ../config.mk
+
 USE_ONION ?= n
 ifeq (${USE_ONION}, y)
 ONION_LDFLAGS=-lonion

@@ -1,6 +1,8 @@
 # Travis compatible Makefile
 # ./configure && make && make test
 
+include config.mk
+
 all:
 	make -C src
 
@@ -15,3 +17,4 @@ data/galvinise.pc: data/galvinise.pc.in galv
 	galv 
 
 install:
+	make -C src install
