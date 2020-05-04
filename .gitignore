@@ -4,3 +4,4 @@ galv
 *.a
 check
 tags
+config.mk
