@@ -1,5 +1,7 @@
 Todo for Galvinise
 
+ - Finish what I need to build a .pc from a config file
+ - Write a --install taget for Makefile
  - Add a test for -D
  	- Dfoo -> should exit
 	- Dfoo=bar -> can print bar
