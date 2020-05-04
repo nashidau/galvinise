@@ -1,0 +1,9 @@
+prefix=$prefix
+libdir=$libdir
+includedir=$includedir
+ 
+Name: Galvinise
+Description: A tin-plating, err, templating library.
+Version: $GALVINISE_VERSION
+Libs: -L${libdir}
+Cflags: -I${includedir}
