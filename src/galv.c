@@ -64,8 +64,9 @@ static const luaL_Reg methods[] = {
 
 lua_State *L = NULL;
 
-lua_State *galvinise_init(int *argc, char **argv) {
-	L = lua_open();
+lua_State *
+galvinise_init(int *argc, char **argv) {
+	L = luaL_newstate();
 	assert(L);
 	luaL_openlibs(L);
 	init_symbols();
@@ -119,10 +120,11 @@ init_symbols(void) {
 		lua_setglobal(L, predef_symbols[i].symbol);
 	}
 
-	lua_getglobal(L, "_G");
-	luaL_openlib(L, NULL, methods, 0);
+	for (i = 0 ; methods[i].name ; i ++) {
+		lua_pushcfunction(L, methods[i].func);
+		lua_setglobal(L, methods[i].name);
+	}
 
-	lua_pop(L, 1);
 	return 0;
 }
 
@@ -458,13 +460,15 @@ eval_inline(struct blam *blam, const char *sym, int len) {
 
 	// FIXME: write a wrapper around loadbuffer/setfenv
 	luaL_loadbuffer(L, buf, len + 7, buf);
-
+// FIXME: Restrict environemtn for 5.4
+#if LUA_51
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	if (lua_setfenv(L, -2) != 1) {
 		// FIXME: Shoudl barf.
 		galv_stack_dump(L, "eval_inline failed\n");
 		printf("eval_inline: Setenv failed\n");
 	}
+#endif
 	lua_pcall(L, 0, 1, 0); // FIXME: Use LUA_MULTRET
 	write_object(blam, L, -1);
 	lua_pop(L, 1);
@@ -549,6 +553,8 @@ walk_symbol(const char *sym, int len) {
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
 	luaL_loadbuffer(L, block, len, "eval_lua");
+	// FIXME: Restrict environemtn
+#ifdef LUA_51
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
 	if (lua_setfenv(L, -2) != 1) {
 		// FIXME: Shoudl barf.
@@ -557,7 +563,7 @@ eval_lua(struct blam *blam, const char *block, int len) {
 		printf("[[%.*s]]\n", len, block);
 		exit(1);
 	}
-
+#endif
 	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
 	if (lua_isstring(L, -1)) {
 		blam->write_string(blam, lua_tostring(L, -1));
@@ -688,7 +694,7 @@ galv_stack_dump(lua_State *lua,const char *msg,...){
 				}
 				printf(" %d items (%d array items)",
 						galv_table_count(lua,i),
-						(int)lua_objlen(lua,i));
+						(int)lua_rawlen(lua,i));
 				if (luaL_callmeta(lua, i, "__tostring")){
 					str = lua_tostring(lua,-1);
 					printf("\t%s\n",str);
@@ -706,7 +712,9 @@ galv_stack_dump(lua_State *lua,const char *msg,...){
 				}
 				break;
 			case LUA_TTHREAD:
-				st = lua_objlen(lua,i);
+				{
+				lua_State *thread = lua_tothread(lua, i);
+				st = lua_status(thread);
 				if (st == 0) printf(" %d Okay",st);
 				else if (st == LUA_YIELD) printf(" %d yeild\n",st);
 				else if (st == LUA_ERRRUN) printf(" %d Error Run\n",st);
@@ -716,11 +724,16 @@ galv_stack_dump(lua_State *lua,const char *msg,...){
 					printf(" %d Error Memory\n",st);
 				else if (st == LUA_ERRERR)
 					printf(" %d Error Error\n",st);
+				}
 				break;
 			case LUA_TFUNCTION:
 				printf(" (%p)\n", lua_topointer(lua,i));
 				break;
 			default:
+				if (lua_getmetatable(lua, i)) {
+					printf("has metatable");
+					lua_pop(L, 1); // pop the metatable off
+				}
 				if (luaL_callmeta(lua, i, "__tostring")){
 					str = lua_tostring(lua,-1);
 					lua_pop(lua,1);

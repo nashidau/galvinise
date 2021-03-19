@@ -3,14 +3,14 @@ PREFIX=/usr/local
 
 PKGS=			\
 	talloc		\
-	lua5.1
+	lua5.4
 
 # FIXME: No .pc file for onion
 
 .PHONY:tags
 
 ifndef CFLAGS
-CFLAGS=-Wall -O2 -g3
+CFLAGS=-Wall -O2 -g3 -std=c99
 endif
 
 include ../config.mk

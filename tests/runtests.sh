@@ -1,5 +1,5 @@
-#!/usr/bin/zsh
-#set -e
+#!/usr/bin/env zsh
+set -e
 
 
 for i in test???.gvz ; do

@@ -45,8 +45,11 @@ colours_init(lua_State *L) {
 	lua_pushvalue(L, -1); /* duplicates the metatable */
 	lua_setfield(L, -2, "__index");
 
-	luaL_register(L, NULL, colour_methods);
-	lua_pop(L, 1);
+	for (int i = 0 ; colour_methods[i].name ; i ++) {
+		lua_pushstring(L, colour_methods[i].name);
+		lua_pushcfunction(L, colour_methods[i].func);
+		lua_rawset(L, -3);
+	}
 
 	return 0;
 }
@@ -69,7 +72,6 @@ static int
 colours_new_colour(lua_State *L) {
 	struct colour *c;
 	int n;
-
 
 	n = lua_gettop(L);
 	if (n < 1) {
