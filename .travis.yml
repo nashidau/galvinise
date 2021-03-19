@@ -20,6 +20,7 @@ addons:
      - libtalloc-dev
      - check
 script:
+  - ./configure
   - make
   - (cd tests  ; ./runtests.sh)
 
