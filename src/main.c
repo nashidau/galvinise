@@ -56,7 +56,7 @@ main(int argc, char **argv) {
 		{ NULL, 0, 0, 0 },
 	};
 	const char *optstr = "D:d:l:o:h";
-	char opt;
+	int opt;
 	lua_State *L;
 	
 	L = galvinise_init(&argc, argv);
