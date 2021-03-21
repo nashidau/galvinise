@@ -1,6 +1,5 @@
-#!/usr/bin/env zsh
+#!/bin/sh
 set -e
-
 
 for i in test???.gvz ; do
 	../src/galv $i && diff -u `basename $i .gvz`.expect `basename $i .gvz`
