@@ -10,19 +10,14 @@ language: c
 addons:
   apt:
     packages:
-     - lua5.4
-     - liblua5.4-dev
      - libtalloc-dev
      - check
-       deb http://cz.archive.ubuntu.com/ubuntu groovy main universe
-
+     - liblua5.3-dev
   homebrew:
     packages:
      - lua@5.4
      - talloc
      - check
-before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; wget http://mirrors.kernel.org/ubuntu/pool/universe/l/lua5.4/liblua5.4-dev_5.4.0-2_amd64.deb ; sudo dpkg -i liblua5.4-dev_5.4.0-2_amd64.deb ; fi
 script:
   - ./configure
   - make
