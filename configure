@@ -7,9 +7,21 @@ touch config.mk
 
 # If onion is installed; build with it
 if [ -f /usr/local/lib/libonion.so -o -f /usr/lib/libonion.so ]; then
+  echo "Onion: Enabled"
   echo "USE_ONION=y" >> config.mk 
 else
+  echo "Onion: Disabled"
   echo "USE_ONION=n" >> config.mk
+fi
+
+if pkg-config --exists lua5.4 ; then
+  echo "Lua Version: 5.4"
+  echo "LUA_VERSION=lua5.4" >> config.mk
+elif pkg-config --exists lua5.3 ; then
+  echo "Lua Version: 5.3"
+  echo "LUA_VERSION=lua5.3" >> config.mk
+else
+  echo "Please insteall Lua 5.3 or 5.4"
 fi
 
 exit 0

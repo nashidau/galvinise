@@ -1,9 +1,6 @@
 
 PREFIX=/usr/local
 
-PKGS=			\
-	talloc		\
-	lua5.4
 
 # FIXME: No .pc file for onion
 
@@ -23,6 +20,10 @@ else
 ONION_CFLAGS=-DUSE_ONION=0
 endif
 
+
+PKGS=			\
+	talloc		\
+	${LUA_VERSION}
 
 CFLAGS+=`pkg-config --cflags ${PKGS}` ${ONION_CFLAGS}
 CHECK_CFLAGS+=`pkg-config --cflags ${PKGS} check` ${ONION_CFLAGS}
