@@ -21,5 +21,6 @@ addons:
 script:
   - ./configure
   - make
-  - (cd tests  ; ./runtests.sh)
+  - make check
+  - ./check
 
