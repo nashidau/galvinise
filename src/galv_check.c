@@ -7,12 +7,12 @@
 #include "lua.h" // fixme, shouldn;t need this
 #include "galvinise.h"
 
-static lua_State *galvl;
+static lua_State *galv;
 int galv_stack_dump(lua_State *, const char *msg);
 
 static void setup_galv(void) {
-	galvl = galvinise_init(NULL, NULL);
-	lua_newtable(galvl);
+	galv = galvinise_init(NULL, NULL);
+	lua_newtable(galv);
 }
 
 static void release_galv(void) {
@@ -55,16 +55,16 @@ START_TEST(test_galv_long_string) {
 
 START_TEST(test_galv_var) {
 	const char *str = "$FOO";
-	push_string(galvl, "FOO", "Elvis");
+	push_string(galv, "FOO", "Elvis");
 	char *out = galvinise_buf(str, strlen(str));
 	ck_assert_str_eq("Elvis", out);
 } END_TEST
 
 START_TEST(test_galv_many_var) {
 	const char *str = "$FOO $BAR $FOO $BAZ";
-	push_string(galvl, "FOO", "Elvis");
-	push_string(galvl, "BAR", "Is");
-	push_string(galvl, "BAZ", "The King");
+	push_string(galv, "FOO", "Elvis");
+	push_string(galv, "BAR", "Is");
+	push_string(galv, "BAZ", "The King");
 	char *out = galvinise_buf(str, strlen(str));
 	ck_assert_str_eq("Elvis Is Elvis The King", out);
 } END_TEST

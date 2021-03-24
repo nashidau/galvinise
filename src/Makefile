@@ -22,6 +22,7 @@ endif
 
 
 PKGS=			\
+		check	\
 	talloc		\
 	${LUA_VERSION}
 
