@@ -18,7 +18,7 @@ static void setup_galv(void) {
 static void release_galv(void) {
 }
 
-static char *golden_files[100]; // FIXME: Ditch this limit.
+static char **golden_files;
 
 static void
 push_string(lua_State *L, const char *key, const char *value) {
@@ -110,7 +110,7 @@ START_TEST(test_galv_golden) {
 	ck_assert_int_eq(rv, 0);
 } END_TEST
 
-Suite *galv_suite(void) {
+Suite *galv_suite(void *ctx) {
 	Suite *s;
 
 	s = suite_create("Galv");
@@ -145,6 +145,8 @@ Suite *galv_suite(void) {
 		DIR *dir;
 		struct dirent *dirent;
 		int i = 0;
+		int max_golden = 10; // starting guess
+		golden_files = talloc_array(ctx, char *, max_golden);
 
 		tc = tcase_create("Golden");
 		suite_add_tcase(s, tc);
@@ -160,7 +162,11 @@ Suite *galv_suite(void) {
 			if (strcmp(p, ".gvz") != 0) continue;
 			p = dirent->d_name;
 			// FIXME: Leak
-			golden_files[i ++] = talloc_strdup(NULL, p);
+			if (i >= max_golden) {
+				max_golden *= 2;
+				golden_files = talloc_realloc(ctx, golden_files, char *, max_golden);
+			}
+			golden_files[i ++] = talloc_strdup(golden_files, p);
 		}
 		tcase_add_loop_test(tc, test_galv_golden, 0, i);
 	}

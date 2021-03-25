@@ -6,6 +6,7 @@
 #include <check.h>
 
 #include "blam.h"
+#include "blam_check.h"
 
 START_TEST(test_buf_create) {
 	struct blam *blam;
@@ -47,7 +48,7 @@ START_TEST(test_buf_write_short) {
 	talloc_free(blam);
 } END_TEST
 
-Suite *blam_suite(void) {
+Suite *blam_suite(void *ctx) {
 	Suite *s;
 
 	s = suite_create("Blam");
