@@ -6,6 +6,8 @@ include config.mk
 all:
 	make -C src
 
+check: test
+
 clean:
 	make -C src clean
 

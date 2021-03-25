@@ -21,6 +21,5 @@ addons:
 script:
   - ./configure
   - make
-  - make check
-  - ./check
+  - make test
 
