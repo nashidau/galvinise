@@ -30,5 +30,6 @@ int main(int argc, char **argv) {
 	srunner_run_all(sr, CK_VERBOSE);
 	nfailed = srunner_ntests_failed(sr);
 	srunner_free(sr);
+	talloc_free(ctx);
 	return !!nfailed;
 }
