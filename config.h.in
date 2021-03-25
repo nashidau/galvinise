@@ -1,0 +1,5 @@
+
+
+#define Galvinise_VERSION_MAJOR @Galvinise_VERSION_MAJOR@
+#define Galvinise_VERSION_MINOR @Galvinise_VERSION_MINOR@
+
