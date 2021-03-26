@@ -1,8 +1,8 @@
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 # set the project name and version
-project(Galvinise VERSION 0.2)
+project(Galvinise VERSION 0.2 LANGUAGES C)
 
 
 # This standard is a decade old. Let us make it a requirement
@@ -15,12 +15,9 @@ include(FindPkgConfig)
 pkg_check_modules(TALLOC REQUIRED talloc)
 pkg_check_modules(CHECK check)
 
-pkg_check_modules(LUA lua5.4)
-if(NOT LUA_FOUND)
-  pkg_check_modules(LUA lua5.3)
-endif()
+pkg_search_module(LUA lua5.4 lua5.3)
 
-include_directories(SYSTEM ${TALLOC_INCLUDEDIR} ${CHECK_INCLUDEDIR} ${LUA_INCLUDEDIR})
+include_directories(${TALLOC_INCLUDEDIR} ${CHECK_INCLUDEDIR} ${LUA_INCLUDEDIR})
 
 configure_file(config.h.in config.h)
 add_subdirectory(src)
