@@ -6,3 +6,4 @@ check
 tags
 config.mk
 tmp
+build # usual cmake build out dir
