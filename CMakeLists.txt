@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # set the project name and version
-project(Galvinise VERSION 0.2 PROJECT C)
+project(Galvinise VERSION 0.2 LANGUAGES C)
 
 
 # This standard is a decade old. Let us make it a requirement
