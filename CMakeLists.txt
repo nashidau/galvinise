@@ -9,6 +9,8 @@ project(Galvinise VERSION 0.2 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_compile_options(-Wall -Wextra)
 
 include(FindPkgConfig)

@@ -7,7 +7,7 @@ PREFIX=/usr/local
 .PHONY:tags
 
 ifndef CFLAGS
-CFLAGS=-Wall -O2 -g3 -std=c99
+CFLAGS=-Wall -O2 -g3 -std=c2x
 endif
 
 include ../config.mk

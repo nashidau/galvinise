@@ -1,4 +1,4 @@
-#define _GNU_SOURCE 1
+//#define _GNU_SOURCE 1
 
 #include <assert.h>
 #include <ctype.h>

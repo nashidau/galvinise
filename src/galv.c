@@ -551,6 +551,25 @@ walk_symbol(const char *sym, int len) {
 	return 0;
 }
 
+__attribute__((noreturn)) static void
+handle_lua_error(lua_State *L, int errcode) {
+	switch (errcode) {
+	case LUA_ERRRUN:
+		fprintf(stderr, "Lua runtime error: %s\n", lua_tostring(L, -1));
+		break;
+	case LUA_ERRMEM:
+		fprintf(stderr, "Lua memory error: %s\n", lua_tostring(L, -1));
+		break;
+	case LUA_ERRERR:
+		fprintf(stderr, "Lua error handling error: %s\n", lua_tostring(L, -1));
+		break;
+	case LUA_ERRSYNTAX:
+		fprintf(stderr, "Lua syntax error: %s\n", lua_tostring(L, -1));
+		break;
+	}
+	exit(1);
+}
+
 // FIXME: Should get the line number or something.
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
@@ -566,7 +585,11 @@ eval_lua(struct blam *blam, const char *block, int len) {
 		exit(1);
 	}
 #endif
-	lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
+	int rv = lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
+	if (rv != 0){
+		handle_lua_error(L, rv);
+	}
+
 	if (lua_isstring(L, -1)) {
 		blam->write_string(blam, lua_tostring(L, -1));
 	}

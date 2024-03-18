@@ -1,4 +1,5 @@
 #include <check.h>
+#include <stdarg.h>
 #include <talloc.h>
 
 #include "galv_check.h"
