@@ -1,5 +1,5 @@
 
-PREFIX=/usr/local
+PREFIX=/Users/nash
 
 
 # FIXME: No .pc file for onion
@@ -57,8 +57,8 @@ libgalv.a : ${srcs-y}
 
 install: libgalv.a galv
 	cp galv ${PREFIX}/bin
-	install galvinise.h /usr/local/include
-	install libgalv.a /usr/local/lib
+	install galvinise.h ${PREFIX}/include
+	install libgalv.a ${PREFIX}/lib
 
 tags:
 	ctags -R .
