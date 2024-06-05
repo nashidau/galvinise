@@ -3,6 +3,8 @@
 
 #include <lua.h>
 
+#include <stdbool.h>
+
 struct onion_response_t;
 
 struct galv_file {

@@ -41,6 +41,7 @@ static struct predef_symbols {
 #define N_PREDEF_SYMS ((int)(sizeof(predef_symbols)/sizeof(predef_symbols[0])))
 
 static int galv_lua_include(lua_State *L);
+static int galv_lua_includeraw(lua_State *L);
 static int galv_lua_outraw(lua_State *L);
 
 static int process_file(struct blam *, const char *infilename);
@@ -60,6 +61,7 @@ void galv_stack_dump(lua_State *lua,const char *msg,...);
 
 static const luaL_Reg methods[] = {
 	{ "include",	galv_lua_include },
+	{ "includeraw", galv_lua_includeraw },
 	{ "Oraw",	galv_lua_outraw },
 	{ NULL, NULL },
 };
@@ -622,6 +624,46 @@ galv_lua_include(lua_State *L) {
 		fprintf(stderr, "Process file failed\n");
 		exit(1);
 	}
+
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
+/**
+ *  Include another file; don't process as gvz file however
+ */
+static int
+galv_lua_includeraw(lua_State *L) {
+	struct blam *blam;
+	const char *name;
+	char *buf;
+	struct stat st;
+
+	name = lua_tostring(L, lua_gettop(L));
+
+	lua_getglobal(L, "blam"); // FIXME: check
+	blam = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+
+	{
+		int fd;
+		fd = open(name, O_RDONLY);
+		if (fd == -1) {
+			fprintf(stderr, "Unable to open '%s': %s\n", name,
+					strerror(errno));
+			return -1;
+		}
+
+		fstat(fd, &st);
+		buf = malloc(st.st_size + 1);
+		buf[st.st_size] = 0;
+		read(fd, buf, st.st_size);
+		close(fd);;
+	}
+
+	blam->write(blam, buf, st.st_size);
+
+	free(buf);
 
 	lua_pushboolean(L, 1);
 	return 1;
