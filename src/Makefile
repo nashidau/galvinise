@@ -1,5 +1,5 @@
 
-PREFIX=/Users/nash
+PREFIX=/Users/nash/
 
 
 # FIXME: No .pc file for onion

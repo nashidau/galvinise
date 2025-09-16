@@ -39,6 +39,7 @@ usage(const char *command) {
 	printf("\n");
 	printf(" -d VAR=value Define a value\n");
 	printf(" -l <Lua> Lua code to be executed\n");
+	printf(" -o <outfile> Where to write the output\n");
 	printf(" -h Help\n");
 
 	exit(0);
@@ -50,14 +51,15 @@ main(int argc, char **argv) {
 	static const struct option long_options[] = {
 		{ "define", required_argument, 0, 'd' },
 		{ "lua", required_argument, 0, 'l' },
-		{ "output", required_argument, 0, 'r' },
+		{ "output", required_argument, 0, 'o' },
 		{ "verbose", no_argument, 0, 'v' },
 		{ "help", no_argument, 0, 'h' },
 		{ NULL, 0, 0, 0 },
 	};
-	const char *optstr = "D:d:l:o:h";
+	const char *optstr = "D:d:l:o:hv";
 	int opt;
 	lua_State *L;
+	const char *outfile;
 	
 	L = galvinise_init(&argc, argv);
 
@@ -72,7 +74,7 @@ main(int argc, char **argv) {
 			printf("Lua script\n");
 			break;
 		case 'o':
-			printf("Outfile\n");
+			outfile = optarg;
 			break;
 		case 'v':
 			printf("Verbose\n");
@@ -93,7 +95,12 @@ main(int argc, char **argv) {
 		}
 		cur->next = NULL;
 		cur->name = argv[optind];
-		cur->outfile = get_name(cur, cur->name);
+		if (outfile) {
+			cur->outfile = strdup(outfile);
+			outfile = NULL;
+		} else {
+			cur->outfile = get_name(cur, cur->name);
+		}
 	}
 
 	if (cur == NULL) {
