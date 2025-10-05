@@ -59,7 +59,7 @@ main(int argc, char **argv) {
 	const char *optstr = "D:d:l:o:hv";
 	int opt;
 	lua_State *L;
-	const char *outfile;
+	const char *outfile = NULL;
 	
 	L = galvinise_init(&argc, argv);
 
