@@ -1,5 +1,5 @@
 
-PREFIX=/Users/nash/
+PREFIX=${HOME}
 
 
 # FIXME: No .pc file for onion
@@ -11,6 +11,8 @@ CFLAGS=-Wall -O2 -g3 -std=c2x
 endif
 
 include ../config.mk
+
+LUA_VERSION=lua5.3
 
 USE_ONION ?= n
 ifeq (${USE_ONION}, y)
