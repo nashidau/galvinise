@@ -322,7 +322,9 @@ static int process_internal(const char *in, int len, struct blam *blam) {
 				nbytes += 1;
 				test = p + nbytes;
 			} while (*test != '}');
-			eval_lua(blam, p, nbytes - 1);
+			if (eval_lua(blam, p, nbytes - 1) != 0) {
+				exit(1);
+			}
 			p += 1;
 			p += nbytes;
 		} else {
@@ -575,7 +577,14 @@ handle_lua_error(lua_State *L, int errcode) {
 // FIXME: Should get the line number or something.
 static int
 eval_lua(struct blam *blam, const char *block, int len) {
-	luaL_loadbuffer(L, block, len, "eval_lua");
+	int rv;
+
+	rv = luaL_loadbuffer(L, block, len, "eval_lua");
+	if (rv != LUA_OK) {
+		fprintf(stderr, "Failed to parse block: %.*s", 100, block);
+		lua_pop(L, 1);
+		return -1;
+	}
 	// FIXME: Restrict environemtn
 #ifdef LUA_51
 	lua_rawgeti(L, LUA_REGISTRYINDEX, gref);
@@ -587,7 +596,7 @@ eval_lua(struct blam *blam, const char *block, int len) {
 		exit(1);
 	}
 #endif
-	int rv = lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
+	rv = lua_pcall(L, 0, 1, 0); // FIXME: Should use LUA_MULTRET
 	if (rv != 0){
 		handle_lua_error(L, rv);
 	}
